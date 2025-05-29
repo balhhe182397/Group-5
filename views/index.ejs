@@ -1,0 +1,108 @@
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1>Welcome to Library Management</h1>
+                <p class="lead">Discover, borrow, and manage books with ease.</p>
+                <div class="mt-4">
+                    <a href="/books" class="btn btn-light btn-lg me-3">
+                        <i class="fas fa-books me-2"></i>Browse Books
+                    </a>
+                    <% if (!user) { %>
+                        <a href="/users/register" class="btn btn-outline-light btn-lg">
+                            <i class="fas fa-user-plus me-2"></i>Join Now
+                        </a>
+                    <% } %>
+                </div>
+            </div>
+            <div class="col-md-4 text-center">
+                <i class="fas fa-book-reader fa-6x"></i>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Recent Additions -->
+<section class="container mb-5">
+    <h2 class="mb-4">Recent Additions</h2>
+    <div class="row">
+        <% if (recentBooks && recentBooks.length > 0) { %>
+            <% recentBooks.forEach(book => { %>
+                <div class="col-md-4 mb-4">
+                    <div class="card book-card">
+                        <div class="card-body">
+                            <h5 class="card-title"><%= book.title %></h5>
+                            <h6 class="card-subtitle mb-2 text-muted">By <%= book.author %></h6>
+                            <p class="card-text">
+                                <small class="text-muted">
+                                    ISBN: <%= book.isbn %><br>
+                                    Category: <%= book.category %><br>
+                                    Available: <%= book.available_quantity %>
+                                </small>
+                            </p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="badge <%= book.available_quantity > 0 ? 'bg-success' : 'bg-danger' %>">
+                                    <%= book.available_quantity > 0 ? 'Available' : 'Not Available' %>
+                                </span>
+                                <% if (user && book.available_quantity > 0) { %>
+                                    <a href="/borrows/borrow/<%= book.id %>" class="btn btn-primary btn-sm">
+                                        <i class="fas fa-bookmark me-1"></i> Borrow
+                                    </a>
+                                <% } %>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            <% }); %>
+        <% } else { %>
+            <div class="col-12">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i> No recent books added yet.
+                </div>
+            </div>
+        <% } %>
+    </div>
+</section>
+
+<!-- Popular Books -->
+<section class="container mb-5">
+    <h2 class="mb-4">Popular Books</h2>
+    <div class="row">
+        <% if (popularBooks && popularBooks.length > 0) { %>
+            <% popularBooks.forEach(book => { %>
+                <div class="col-md-4 mb-4">
+                    <div class="card book-card">
+                        <div class="card-body">
+                            <h5 class="card-title"><%= book.title %></h5>
+                            <h6 class="card-subtitle mb-2 text-muted">By <%= book.author %></h6>
+                            <p class="card-text">
+                                <small class="text-muted">
+                                    ISBN: <%= book.isbn %><br>
+                                    Category: <%= book.category %><br>
+                                    Available: <%= book.available_quantity %>
+                                </small>
+                            </p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="badge <%= book.available_quantity > 0 ? 'bg-success' : 'bg-danger' %>">
+                                    <%= book.available_quantity > 0 ? 'Available' : 'Not Available' %>
+                                </span>
+                                <% if (user && book.available_quantity > 0) { %>
+                                    <a href="/borrows/borrow/<%= book.id %>" class="btn btn-primary btn-sm">
+                                        <i class="fas fa-bookmark me-1"></i> Borrow
+                                    </a>
+                                <% } %>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            <% }); %>
+        <% } else { %>
+            <div class="col-12">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i> No popular books yet.
+                </div>
+            </div>
+        <% } %>
+    </div>
+</section> 

@@ -1,0 +1,48 @@
+<div class="container">
+    <h2 class="mb-4">My Borrows</h2>
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Book</th>
+                    <th>Borrow Date</th>
+                    <th>Due Date</th>
+                    <th>Return Date</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% if (borrows && borrows.length > 0) { %>
+                    <% borrows.forEach(borrow => { %>
+                        <tr>
+                            <td><%= borrow.book_title %></td>
+                            <td><%= new Date(borrow.borrow_date).toLocaleDateString() %></td>
+                            <td><%= new Date(borrow.due_date).toLocaleDateString() %></td>
+                            <td>
+                                <%= borrow.return_date ? new Date(borrow.return_date).toLocaleDateString() : '-' %>
+                            </td>
+                            <td>
+                                <% if (borrow.return_date) { %>
+                                    <span class="badge bg-success">Returned</span>
+                                <% } else if (new Date(borrow.due_date) < new Date()) { %>
+                                    <span class="badge bg-danger">Overdue</span>
+                                <% } else { %>
+                                    <span class="badge bg-primary">Borrowed</span>
+                                <% } %>
+                            </td>
+                        </tr>
+                    <% }); %>
+                <% } else { %>
+                    <tr>
+                        <td colspan="5" class="text-center">
+                            <div class="alert alert-info mb-0">
+                                <i class="fas fa-info-circle me-2"></i> You haven't borrowed any books yet. 
+                                <a href="/books" class="alert-link">Browse books</a> to get started.
+                            </div>
+                        </td>
+                    </tr>
+                <% } %>
+            </tbody>
+        </table>
+    </div>
+</div> 
