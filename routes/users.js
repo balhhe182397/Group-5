@@ -356,4 +356,60 @@ router.post('/reset-password/:token', async (req, res) => {
     }
 });
 
+// View all users (admin only)
+router.get('/', isAdmin, async (req, res) => {
+    try {
+        const [users] = await db.query(`
+            SELECT 
+                id,
+                username,
+                email,
+                full_name,
+                role,
+                is_verified,
+                created_at
+            FROM users 
+            ORDER BY created_at DESC
+        `);
+        res.render('users/index', { users });
+    } catch (err) {
+        console.error(err);
+        req.flash('error_msg', 'An error occurred while fetching users');
+        res.redirect('/admin');
+    }
+});
+
+// View user profile by ID (admin only)
+router.get('/profile/:id', isAdmin, async (req, res) => {
+    try {
+        const [users] = await db.query(`
+            SELECT 
+                id,
+                username,
+                email,
+                full_name,
+                role,
+                student_id,
+                lecturer_id,
+                id_card_image,
+                is_verified,
+                created_at
+            FROM users 
+            WHERE id = ?
+        `, [req.params.id]);
+
+        if (users.length === 0) {
+            req.flash('error_msg', 'User not found');
+            return res.redirect('/users');
+        }
+
+        const user = users[0];
+        res.render('users/profile-detail', { user });
+    } catch (err) {
+        console.error(err);
+        req.flash('error_msg', 'An error occurred while fetching user details');
+        res.redirect('/users');
+    }
+});
+
 module.exports = router; 

@@ -188,15 +188,8 @@
                         </li>
                         <% if (user.role === 'admin' || user.role === 'librarian') { %>
                             <li class="nav-item">
-                                <a class="nav-link" href="/borrows">
-                                    <i class="fas fa-list me-1"></i> All Borrows
-                                </a>
-                            </li>
-                        <% } %>
-                        <% if (user.role === 'admin') { %>
-                            <li class="nav-item">
-                                <a class="nav-link" href="/users/pending-verifications">
-                                    <i class="fas fa-user-check me-1"></i> Pending Verifications
+                                <a class="nav-link" href="/admin">
+                                    <i class="fas fa-tachometer-alt me-1"></i> Admin Panel
                                 </a>
                             </li>
                         <% } %>

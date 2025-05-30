@@ -1,0 +1,202 @@
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="text-primary mb-3">
+                <i class="fas fa-tachometer-alt me-2"></i>Admin Dashboard
+            </h2>
+            <p class="text-muted">Manage your library system efficiently</p>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-4">
+            <div class="card stat-card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-subtitle mb-2">Total Books</h6>
+                            <h3 class="card-title mb-0"><%= stats.totalBooks %></h3>
+                        </div>
+                        <i class="fas fa-books fa-2x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="card stat-card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-subtitle mb-2">Active Borrows</h6>
+                            <h3 class="card-title mb-0"><%= stats.activeBorrows %></h3>
+                        </div>
+                        <i class="fas fa-bookmark fa-2x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="card stat-card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-subtitle mb-2">Pending Verifications</h6>
+                            <h3 class="card-title mb-0"><%= stats.pendingVerifications %></h3>
+                        </div>
+                        <i class="fas fa-user-check fa-2x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="card stat-card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-subtitle mb-2">Total Users</h6>
+                            <h3 class="card-title mb-0"><%= stats.totalUsers %></h3>
+                        </div>
+                        <i class="fas fa-users fa-2x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Actions -->
+    <div class="row">
+        <!-- Books Management -->
+        <div class="col-md-6 mb-4">
+            <div class="card admin-card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-books me-2 text-primary"></i>Books Management
+                    </h5>
+                    <p class="card-text text-muted">Manage your library's book collection</p>
+                    <div class="admin-actions">
+                        <a href="/books" class="btn btn-outline-primary">
+                            <i class="fas fa-list me-2"></i>View All Books
+                        </a>
+                        <a href="/books/add" class="btn btn-outline-primary">
+                            <i class="fas fa-plus me-2"></i>Add New Book
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Borrows Management -->
+        <div class="col-md-6 mb-4">
+            <div class="card admin-card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-bookmark me-2 text-success"></i>Borrows Management
+                    </h5>
+                    <p class="card-text text-muted">Track and manage book borrows</p>
+                    <div class="admin-actions">
+                        <a href="/borrows" class="btn btn-outline-success">
+                            <i class="fas fa-list me-2"></i>View All Borrows
+                        </a>
+                        <a href="/borrows/pending" class="btn btn-outline-success">
+                            <i class="fas fa-clock me-2"></i>Pending Returns
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- User Management -->
+        <div class="col-md-6 mb-4">
+            <div class="card admin-card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-users me-2 text-info"></i>User Management
+                    </h5>
+                    <p class="card-text text-muted">Manage library users and verifications</p>
+                    <div class="admin-actions">
+                        <a href="/users" class="btn btn-outline-info">
+                            <i class="fas fa-list me-2"></i>View All Users
+                        </a>
+                        <a href="/users/pending-verifications" class="btn btn-outline-info">
+                            <i class="fas fa-user-check me-2"></i>Pending Verifications
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reports -->
+        <div class="col-md-6 mb-4">
+            <div class="card admin-card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-chart-bar me-2 text-warning"></i>Reports
+                    </h5>
+                    <p class="card-text text-muted">View library statistics and reports</p>
+                    <div class="admin-actions">
+                        <a href="/admin/reports/borrows" class="btn btn-outline-warning">
+                            <i class="fas fa-chart-line me-2"></i>Borrowing Reports
+                        </a>
+                        <a href="/admin/reports/users" class="btn btn-outline-warning">
+                            <i class="fas fa-chart-pie me-2"></i>User Statistics
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.stat-card {
+    border: none;
+    border-radius: 10px;
+    transition: transform 0.2s;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+}
+
+.admin-card {
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    transition: transform 0.2s;
+}
+
+.admin-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+.admin-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.btn {
+    padding: 0.5rem 1rem;
+    font-weight: 500;
+    border-radius: 5px;
+    transition: all 0.2s;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.card-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.card-text {
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+}
+</style>
