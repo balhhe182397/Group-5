@@ -31,6 +31,7 @@ CREATE TABLE books (
     quantity INT NOT NULL DEFAULT 1,
     available_quantity INT NOT NULL DEFAULT 1,
     description TEXT,
+    cover_image VARCHAR(255) NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );

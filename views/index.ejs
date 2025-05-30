@@ -29,8 +29,13 @@
     <div class="row">
         <% if (recentBooks && recentBooks.length > 0) { %>
             <% recentBooks.forEach(book => { %>
-                <div class="col-md-4 mb-4">
-                    <div class="card book-card">
+                <div class="col-md-3 mb-4">
+                    <div class="card book-card h-100">
+                        <div class="book-cover-container">
+                            <img src="<%= book.cover_image || '/images/default-book-cover.jpg' %>" 
+                                 class="card-img-top book-cover" 
+                                 alt="<%= book.title %> cover">
+                        </div>
                         <div class="card-body">
                             <h5 class="card-title"><%= book.title %></h5>
                             <h6 class="card-subtitle mb-2 text-muted">By <%= book.author %></h6>
@@ -71,8 +76,13 @@
     <div class="row">
         <% if (popularBooks && popularBooks.length > 0) { %>
             <% popularBooks.forEach(book => { %>
-                <div class="col-md-4 mb-4">
-                    <div class="card book-card">
+                <div class="col-md-3 mb-4">
+                    <div class="card book-card h-100">
+                        <div class="book-cover-container">
+                            <img src="<%= book.cover_image || '/images/default-book-cover.jpg' %>" 
+                                 class="card-img-top book-cover" 
+                                 alt="<%= book.title %> cover">
+                        </div>
                         <div class="card-body">
                             <h5 class="card-title"><%= book.title %></h5>
                             <h6 class="card-subtitle mb-2 text-muted">By <%= book.author %></h6>
@@ -105,4 +115,93 @@
             </div>
         <% } %>
     </div>
-</section> 
+</section>
+
+<style>
+.book-card {
+    transition: transform 0.2s;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    background: white;
+    border: none;
+    border-radius: 8px;
+}
+
+.book-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+.book-cover-container {
+    height: 280px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f8f9fa;
+    padding: 1rem;
+    border-radius: 8px 8px 0 0;
+    position: relative;
+}
+
+.book-cover {
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    transition: transform 0.3s;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.book-card:hover .book-cover {
+    transform: scale(1.05);
+}
+
+.card-body {
+    padding: 1rem;
+    background: white;
+    border-radius: 0 0 8px 8px;
+}
+
+.card-title {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 0.4rem;
+    color: #2c3e50;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.card-subtitle {
+    font-size: 0.9rem;
+    color: #7f8c8d;
+    margin-bottom: 0.5rem;
+}
+
+.card-text small {
+    line-height: 1.4;
+    color: #34495e;
+    font-size: 0.8rem;
+}
+
+.badge {
+    padding: 0.4em 0.8em;
+    font-weight: 500;
+    font-size: 0.8rem;
+}
+
+.btn-primary {
+    padding: 0.4em 0.8em;
+    font-weight: 500;
+    border-radius: 4px;
+    font-size: 0.8rem;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+</style> 

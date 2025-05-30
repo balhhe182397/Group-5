@@ -2,6 +2,32 @@ const express = require('express');
 const router = express.Router();
 const db = require('../config/database');
 const { isAuthenticated, isAdmin } = require('../middleware/auth');
+const multer = require('multer');
+const path = require('path');
+
+// Configure multer for image upload
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, 'public/uploads/books')
+    },
+    filename: function (req, file, cb) {
+        cb(null, Date.now() + '-' + file.originalname)
+    }
+});
+
+const upload = multer({
+    storage: storage,
+    fileFilter: function (req, file, cb) {
+        const filetypes = /jpeg|jpg|png|gif/;
+        const mimetype = filetypes.test(file.mimetype);
+        const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
+
+        if (mimetype && extname) {
+            return cb(null, true);
+        }
+        cb(new Error('Only image files are allowed!'));
+    }
+});
 
 // Get all books
 router.get('/', async (req, res) => {
@@ -31,12 +57,14 @@ router.get('/add', isAdmin, (req, res) => {
 });
 
 // Add book process
-router.post('/add', isAdmin, async (req, res) => {
+router.post('/add', isAdmin, upload.single('cover_image'), async (req, res) => {
     try {
         const { title, author, isbn, category, quantity } = req.body;
+        const cover_image = req.file ? `/uploads/books/${req.file.filename}` : null;
+        
         await db.query(
-            'INSERT INTO books (title, author, isbn, category, quantity, available_quantity) VALUES (?, ?, ?, ?, ?, ?)',
-            [title, author, isbn, category, quantity, quantity]
+            'INSERT INTO books (title, author, isbn, category, quantity, available_quantity, cover_image) VALUES (?, ?, ?, ?, ?, ?, ?)',
+            [title, author, isbn, category, quantity, quantity, cover_image]
         );
         req.flash('success_msg', 'Book added successfully');
         res.redirect('/books');
@@ -64,7 +92,7 @@ router.get('/edit/:id', isAdmin, async (req, res) => {
 });
 
 // Edit book process
-router.post('/edit/:id', isAdmin, async (req, res) => {
+router.post('/edit/:id', isAdmin, upload.single('cover_image'), async (req, res) => {
     try {
         const { title, author, isbn, category, quantity } = req.body;
         const [book] = await db.query('SELECT * FROM books WHERE id = ?', [req.params.id]);
@@ -77,10 +105,15 @@ router.post('/edit/:id', isAdmin, async (req, res) => {
         const currentQuantity = book[0].quantity;
         const borrowedQuantity = currentQuantity - book[0].available_quantity;
         const newAvailableQuantity = Math.max(0, quantity - borrowedQuantity);
+        
+        let cover_image = book[0].cover_image;
+        if (req.file) {
+            cover_image = `/uploads/books/${req.file.filename}`;
+        }
 
         await db.query(
-            'UPDATE books SET title = ?, author = ?, isbn = ?, category = ?, quantity = ?, available_quantity = ? WHERE id = ?',
-            [title, author, isbn, category, quantity, newAvailableQuantity, req.params.id]
+            'UPDATE books SET title = ?, author = ?, isbn = ?, category = ?, quantity = ?, available_quantity = ?, cover_image = ? WHERE id = ?',
+            [title, author, isbn, category, quantity, newAvailableQuantity, cover_image, req.params.id]
         );
         req.flash('success_msg', 'Book updated successfully');
         res.redirect('/books');
