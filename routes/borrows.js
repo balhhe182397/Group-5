@@ -3,21 +3,50 @@ const router = express.Router();
 const db = require('../config/database');
 const { isAuthenticated, isLibrarian } = require('../middleware/auth');
 
-// List all borrows
+// List all borrows (for admin/librarian)
 router.get('/', isLibrarian, async (req, res) => {
     try {
         const [borrows] = await db.execute(`
-            SELECT b.*, u.username, u.full_name, bk.title 
+            SELECT b.*, u.username, u.full_name, bk.title,
+                   a.full_name as approver_name
             FROM borrows b 
             JOIN users u ON b.user_id = u.id 
             JOIN books bk ON b.book_id = bk.id 
-            ORDER BY b.borrow_date DESC
+            LEFT JOIN users a ON b.approved_by = a.id
+            ORDER BY b.request_date DESC
         `);
         res.render('borrows/index', { borrows });
     } catch (error) {
         console.error(error);
         req.flash('error_msg', 'Error loading borrows');
         res.redirect('/');
+    }
+});
+
+// Show borrow request details
+router.get('/request/:borrowId', isLibrarian, async (req, res) => {
+    try {
+        const [borrows] = await db.execute(`
+            SELECT b.*, u.username, u.full_name, u.email, u.student_id, u.lecturer_id,
+                   bk.title, bk.author, bk.isbn,
+                   a.full_name as approver_name
+            FROM borrows b 
+            JOIN users u ON b.user_id = u.id 
+            JOIN books bk ON b.book_id = bk.id 
+            LEFT JOIN users a ON b.approved_by = a.id
+            WHERE b.id = ?
+        `, [req.params.borrowId]);
+
+        if (borrows.length === 0) {
+            req.flash('error_msg', 'Borrow request not found');
+            return res.redirect('/borrows');
+        }
+
+        res.render('borrows/request-details', { borrow: borrows[0] });
+    } catch (error) {
+        console.error(error);
+        req.flash('error_msg', 'Error loading borrow request details');
+        res.redirect('/borrows');
     }
 });
 
@@ -29,7 +58,7 @@ router.get('/my-borrows', isAuthenticated, async (req, res) => {
             FROM borrows b 
             JOIN books bk ON b.book_id = bk.id 
             WHERE b.user_id = ? 
-            ORDER BY b.borrow_date DESC
+            ORDER BY b.request_date DESC
         `, [req.session.user.id]);
         res.render('borrows/my-borrows', { borrows });
     } catch (error) {
@@ -39,9 +68,44 @@ router.get('/my-borrows', isAuthenticated, async (req, res) => {
     }
 });
 
-// Borrow a book
+// Show borrow form for a specific book
+router.get('/borrow/:bookId', isAuthenticated, async (req, res) => {
+    try {
+        const [books] = await db.execute('SELECT * FROM books WHERE id = ?', [req.params.bookId]);
+        if (books.length === 0) {
+            req.flash('error_msg', 'Book not found');
+            return res.redirect('/books');
+        }
+
+        const book = books[0];
+        if (book.available_quantity <= 0) {
+            req.flash('error_msg', 'Book is not available for borrowing');
+            return res.redirect('/books');
+        }
+
+        // Check if user already has a pending request for this book
+        const [existingRequests] = await db.execute(
+            'SELECT * FROM borrows WHERE user_id = ? AND book_id = ? AND status = "requested"',
+            [req.session.user.id, req.params.bookId]
+        );
+        if (existingRequests.length > 0) {
+            req.flash('error_msg', 'You already have a pending request for this book');
+            return res.redirect('/books');
+        }
+
+        res.render('borrows/borrow-form', { book });
+    } catch (error) {
+        console.error(error);
+        req.flash('error_msg', 'Error loading borrow form');
+        res.redirect('/books');
+    }
+});
+
+// Request to borrow a book
 router.post('/borrow/:bookId', isAuthenticated, async (req, res) => {
     try {
+        const { pickup_date } = req.body;
+        
         // Check if book is available
         const [books] = await db.execute('SELECT * FROM books WHERE id = ?', [req.params.bookId]);
         if (books.length === 0 || books[0].available_quantity <= 0) {
@@ -49,38 +113,109 @@ router.post('/borrow/:bookId', isAuthenticated, async (req, res) => {
             return res.redirect('/books');
         }
 
-        // Check if user already has this book borrowed
-        const [existingBorrows] = await db.execute(
-            'SELECT * FROM borrows WHERE user_id = ? AND book_id = ? AND status = "borrowed"',
+        // Check if user already has a pending request for this book
+        const [existingRequests] = await db.execute(
+            'SELECT * FROM borrows WHERE user_id = ? AND book_id = ? AND status = "requested"',
             [req.session.user.id, req.params.bookId]
         );
-        if (existingBorrows.length > 0) {
-            req.flash('error_msg', 'You have already borrowed this book');
+        if (existingRequests.length > 0) {
+            req.flash('error_msg', 'You already have a pending request for this book');
             return res.redirect('/books');
         }
 
-        // Calculate due date (14 days from now)
-        const dueDate = new Date();
+        // Create borrow request
+        await db.execute(
+            'INSERT INTO borrows (book_id, user_id, pickup_date, status) VALUES (?, ?, ?, "requested")',
+            [req.params.bookId, req.session.user.id, pickup_date]
+        );
+
+        req.flash('success_msg', 'Borrow request submitted successfully. Please wait for approval.');
+        res.redirect('/borrows/my-borrows');
+    } catch (error) {
+        console.error(error);
+        req.flash('error_msg', 'Error submitting borrow request');
+        res.redirect('/books');
+    }
+});
+
+// Approve borrow request
+router.post('/approve/:borrowId', isLibrarian, async (req, res) => {
+    try {
+        const [borrows] = await db.execute('SELECT * FROM borrows WHERE id = ?', [req.params.borrowId]);
+        if (borrows.length === 0) {
+            req.flash('error_msg', 'Borrow request not found');
+            return res.redirect('/borrows');
+        }
+
+        const borrow = borrows[0];
+        if (borrow.status !== 'requested') {
+            req.flash('error_msg', 'Invalid borrow request status');
+            return res.redirect('/borrows');
+        }
+
+        // Calculate due date (14 days from pickup date)
+        const dueDate = new Date(borrow.pickup_date);
         dueDate.setDate(dueDate.getDate() + 14);
 
-        // Create borrow record
+        // Update borrow record
         await db.execute(
-            'INSERT INTO borrows (book_id, user_id, due_date) VALUES (?, ?, ?)',
-            [req.params.bookId, req.session.user.id, dueDate]
+            `UPDATE borrows 
+             SET approval_status = 'approved', 
+                 approved_by = ?, 
+                 approval_date = CURRENT_TIMESTAMP,
+                 due_date = ?,
+                 status = 'borrowed'
+             WHERE id = ?`,
+            [req.session.user.id, dueDate, req.params.borrowId]
         );
 
         // Update book available quantity
         await db.execute(
             'UPDATE books SET available_quantity = available_quantity - 1 WHERE id = ?',
-            [req.params.bookId]
+            [borrow.book_id]
         );
 
-        req.flash('success_msg', 'Book borrowed successfully');
-        res.redirect('/borrows/my-borrows');
+        req.flash('success_msg', 'Borrow request approved successfully');
+        res.redirect('/borrows');
     } catch (error) {
         console.error(error);
-        req.flash('error_msg', 'Error borrowing book');
-        res.redirect('/books');
+        req.flash('error_msg', 'Error approving borrow request');
+        res.redirect('/borrows');
+    }
+});
+
+// Reject borrow request
+router.post('/reject/:borrowId', isLibrarian, async (req, res) => {
+    try {
+        const [borrows] = await db.execute('SELECT * FROM borrows WHERE id = ?', [req.params.borrowId]);
+        if (borrows.length === 0) {
+            req.flash('error_msg', 'Borrow request not found');
+            return res.redirect('/borrows');
+        }
+
+        const borrow = borrows[0];
+        if (borrow.status !== 'requested') {
+            req.flash('error_msg', 'Invalid borrow request status');
+            return res.redirect('/borrows');
+        }
+
+        // Update borrow record
+        await db.execute(
+            `UPDATE borrows 
+             SET approval_status = 'rejected', 
+                 approved_by = ?, 
+                 approval_date = CURRENT_TIMESTAMP,
+                 status = 'cancelled'
+             WHERE id = ?`,
+            [req.session.user.id, req.params.borrowId]
+        );
+
+        req.flash('success_msg', 'Borrow request rejected successfully');
+        res.redirect('/borrows');
+    } catch (error) {
+        console.error(error);
+        req.flash('error_msg', 'Error rejecting borrow request');
+        res.redirect('/borrows');
     }
 });
 

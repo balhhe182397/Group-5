@@ -1,0 +1,51 @@
+<%- include('../layouts/header') %>
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Request to Borrow Book</h3>
+                </div>
+                <div class="card-body">
+                    <h4><%= book.title %></h4>
+                    <p class="text-muted">Author: <%= book.author %></p>
+                    <p>Available copies: <%= book.available_quantity %></p>
+                    
+                    <div class="alert alert-info">
+                        <h5>Borrowing Information:</h5>
+                        <ul>
+                            <li>You can borrow this book for 14 days from the pickup date</li>
+                            <li>Please select a pickup date and time</li>
+                            <li>Your request will need to be approved by a librarian</li>
+                            <li>Please bring your student/lecturer ID when picking up the book</li>
+                        </ul>
+                    </div>
+
+                    <form action="/borrows/borrow/<%= book.id %>" method="POST">
+                        <div class="form-group mb-3">
+                            <label for="pickup_date" class="form-label">Pickup Date and Time:</label>
+                            <input type="datetime-local" 
+                                   class="form-control" 
+                                   id="pickup_date" 
+                                   name="pickup_date" 
+                                   required
+                                   min="<%= new Date().toISOString().slice(0, 16) %>"
+                                   max="<%= new Date(Date.now() + 7*24*60*60*1000).toISOString().slice(0, 16) %>">
+                            <small class="form-text text-muted">
+                                Please select a date and time within the next 7 days
+                            </small>
+                        </div>
+
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-primary">Submit Request</button>
+                            <a href="/books" class="btn btn-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<%- include('../layouts/footer') %> 

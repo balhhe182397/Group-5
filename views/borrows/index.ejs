@@ -1,60 +1,90 @@
-<div class="container">
-    <h2 class="mb-4">All Borrows</h2>
+<%- include('../layouts/header') %>
+
+<div class="container mt-4">
+    <h2>Borrow Requests</h2>
+    
     <div class="table-responsive">
-        <table class="table">
+        <table class="table table-striped">
             <thead>
                 <tr>
+                    <th>ID</th>
+                    <th>User</th>
                     <th>Book</th>
-                    <th>Borrower</th>
-                    <th>Borrow Date</th>
-                    <th>Due Date</th>
-                    <th>Return Date</th>
+                    <th>Request Date</th>
+                    <th>Pickup Date</th>
                     <th>Status</th>
+                    <th>Approval</th>
                     <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
-                <% if (borrows && borrows.length > 0) { %>
-                    <% borrows.forEach(borrow => { %>
-                        <tr>
-                            <td><%= borrow.book_title %></td>
-                            <td>
-                                <%= borrow.borrower_full_name %><br>
-                                <small class="text-muted">@<%= borrow.borrower_username %></small>
-                            </td>
-                            <td><%= new Date(borrow.borrow_date).toLocaleDateString() %></td>
-                            <td><%= new Date(borrow.due_date).toLocaleDateString() %></td>
-                            <td>
-                                <%= borrow.return_date ? new Date(borrow.return_date).toLocaleDateString() : '-' %>
-                            </td>
-                            <td>
-                                <% if (borrow.return_date) { %>
-                                    <span class="badge bg-success">Returned</span>
-                                <% } else if (new Date(borrow.due_date) < new Date()) { %>
-                                    <span class="badge bg-danger">Overdue</span>
-                                <% } else { %>
-                                    <span class="badge bg-primary">Borrowed</span>
-                                <% } %>
-                            </td>
-                            <td>
-                                <% if (!borrow.return_date) { %>
-                                    <a href="/borrows/return/<%= borrow.id %>" class="btn btn-success btn-sm">
-                                        <i class="fas fa-undo me-1"></i> Return
-                                    </a>
-                                <% } %>
-                            </td>
-                        </tr>
-                    <% }); %>
-                <% } else { %>
+                <% borrows.forEach(borrow => { %>
                     <tr>
-                        <td colspan="7" class="text-center">
-                            <div class="alert alert-info mb-0">
-                                <i class="fas fa-info-circle me-2"></i> No borrows found.
+                        <td><%= borrow.id %></td>
+                        <td><%= borrow.full_name %></td>
+                        <td><%= borrow.title %></td>
+                        <td><%= new Date(borrow.request_date).toLocaleString() %></td>
+                        <td>
+                            <% if (borrow.pickup_date) { %>
+                                <%= new Date(borrow.pickup_date).toLocaleString() %>
+                            <% } else { %>
+                                -
+                            <% } %>
+                        </td>
+                        <td>
+                            <span class="badge bg-<%= 
+                                borrow.status === 'requested' ? 'warning' :
+                                borrow.status === 'borrowed' ? 'primary' :
+                                borrow.status === 'returned' ? 'success' :
+                                borrow.status === 'overdue' ? 'danger' :
+                                'secondary'
+                            %>">
+                                <%= borrow.status.charAt(0).toUpperCase() + borrow.status.slice(1) %>
+                            </span>
+                        </td>
+                        <td>
+                            <% if (borrow.approval_status === 'pending') { %>
+                                <span class="badge bg-warning">Pending</span>
+                            <% } else if (borrow.approval_status === 'approved') { %>
+                                <span class="badge bg-success">Approved</span>
+                                <br>
+                                <small>By: <%= borrow.approver_name %></small>
+                            <% } else if (borrow.approval_status === 'rejected') { %>
+                                <span class="badge bg-danger">Rejected</span>
+                                <br>
+                                <small>By: <%= borrow.approver_name %></small>
+                            <% } %>
+                        </td>
+                        <td>
+                            <div class="btn-group">
+                                <a href="/borrows/request/<%= borrow.id %>" class="btn btn-info btn-sm">
+                                    <i class="fas fa-eye me-1"></i> View
+                                </a>
+                                <% if (borrow.status === 'requested') { %>
+                                    <form action="/borrows/approve/<%= borrow.id %>" method="POST" class="d-inline">
+                                        <button type="submit" class="btn btn-success btn-sm">
+                                            <i class="fas fa-check me-1"></i> Approve
+                                        </button>
+                                    </form>
+                                    <form action="/borrows/reject/<%= borrow.id %>" method="POST" class="d-inline">
+                                        <button type="submit" class="btn btn-danger btn-sm">
+                                            <i class="fas fa-times me-1"></i> Reject
+                                        </button>
+                                    </form>
+                                <% } else if (borrow.status === 'borrowed') { %>
+                                    <form action="/borrows/return/<%= borrow.id %>" method="POST" class="d-inline">
+                                        <button type="submit" class="btn btn-primary btn-sm">
+                                            <i class="fas fa-undo me-1"></i> Return
+                                        </button>
+                                    </form>
+                                <% } %>
                             </div>
                         </td>
                     </tr>
-                <% } %>
+                <% }); %>
             </tbody>
         </table>
     </div>
-</div> 
+</div>
+
+<%- include('../layouts/footer') %> 

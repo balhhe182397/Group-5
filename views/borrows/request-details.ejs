@@ -1,0 +1,91 @@
+<%- include('../layouts/header') %>
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h3 class="mb-0">Borrow Request Details</h3>
+                    <a href="/borrows" class="btn btn-secondary btn-sm">
+                        <i class="fas fa-arrow-left me-2"></i>Back to List
+                    </a>
+                </div>
+                <div class="card-body">
+                    <!-- Request Status -->
+                    <div class="alert alert-<%= 
+                        borrow.approval_status === 'pending' ? 'warning' :
+                        borrow.approval_status === 'approved' ? 'success' :
+                        'danger'
+                    %> mb-4">
+                        <h5 class="alert-heading">
+                            Status: <%= borrow.approval_status.charAt(0).toUpperCase() + borrow.approval_status.slice(1) %>
+                        </h5>
+                        <% if (borrow.approval_status !== 'pending') { %>
+                            <p class="mb-0">
+                                By: <%= borrow.approver_name %><br>
+                                On: <%= new Date(borrow.approval_date).toLocaleString() %>
+                            </p>
+                        <% } %>
+                    </div>
+
+                    <!-- Book Information -->
+                    <div class="mb-4">
+                        <h4>Book Information</h4>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Title:</strong> <%= borrow.title %></p>
+                                <p><strong>Author:</strong> <%= borrow.author %></p>
+                                <p><strong>ISBN:</strong> <%= borrow.isbn %></p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Request Date:</strong> <%= new Date(borrow.request_date).toLocaleString() %></p>
+                                <p><strong>Pickup Date:</strong> <%= new Date(borrow.pickup_date).toLocaleString() %></p>
+                                <% if (borrow.due_date) { %>
+                                    <p><strong>Due Date:</strong> <%= new Date(borrow.due_date).toLocaleString() %></p>
+                                <% } %>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Borrower Information -->
+                    <div class="mb-4">
+                        <h4>Borrower Information</h4>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Name:</strong> <%= borrow.full_name %></p>
+                                <p><strong>Email:</strong> <%= borrow.email %></p>
+                                <p><strong>Username:</strong> <%= borrow.username %></p>
+                            </div>
+                            <div class="col-md-6">
+                                <% if (borrow.student_id) { %>
+                                    <p><strong>Student ID:</strong> <%= borrow.student_id %></p>
+                                <% } %>
+                                <% if (borrow.lecturer_id) { %>
+                                    <p><strong>Lecturer ID:</strong> <%= borrow.lecturer_id %></p>
+                                <% } %>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Approval Actions -->
+                    <% if (borrow.status === 'requested') { %>
+                        <div class="d-flex justify-content-end gap-2">
+                            <form action="/borrows/reject/<%= borrow.id %>" method="POST" class="d-inline">
+                                <button type="submit" class="btn btn-danger">
+                                    <i class="fas fa-times me-2"></i>Reject Request
+                                </button>
+                            </form>
+                            <form action="/borrows/approve/<%= borrow.id %>" method="POST" class="d-inline">
+                                <button type="submit" class="btn btn-success">
+                                    <i class="fas fa-check me-2"></i>Approve Request
+                                </button>
+                            </form>
+                        </div>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<%- include('../layouts/footer') %> 

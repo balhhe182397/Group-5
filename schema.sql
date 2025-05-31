@@ -41,13 +41,20 @@ CREATE TABLE borrows (
     id INT PRIMARY KEY AUTO_INCREMENT,
     book_id INT NOT NULL,
     user_id INT NOT NULL,
-    borrow_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    due_date TIMESTAMP NOT NULL,
+    request_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    approval_status ENUM('pending', 'approved', 'rejected') NOT NULL DEFAULT 'pending',
+    approved_by INT NULL,
+    approval_date TIMESTAMP NULL,
+    pickup_date TIMESTAMP NULL,
+    borrow_date TIMESTAMP NULL,
+    due_date TIMESTAMP NULL,
     return_date TIMESTAMP NULL,
+    status ENUM('requested', 'borrowed', 'returned', 'overdue', 'cancelled') NOT NULL DEFAULT 'requested',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (book_id) REFERENCES books(id),
-    FOREIGN KEY (user_id) REFERENCES users(id)
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY (approved_by) REFERENCES users(id)
 );
 
 -- Insert default admin user with unencrypted password
