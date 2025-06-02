@@ -10,8 +10,10 @@ router.get('/', isLibrarian, async (req, res) => {
             SELECT b.*, u.username, u.full_name, bk.title,
                    a.full_name as approver_name,
                    CASE 
-                       WHEN b.status = 'overdue' AND b.due_date < CURRENT_TIMESTAMP 
+                       WHEN b.status IN ('borrowed', 'overdue') AND b.due_date < CURRENT_TIMESTAMP 
                        THEN DATEDIFF(CURRENT_TIMESTAMP, b.due_date) * 5000
+                       WHEN b.status = 'returned' AND b.due_date < b.return_date
+                       THEN DATEDIFF(b.return_date, b.due_date) * 5000
                        ELSE b.fine_amount 
                    END as current_fine
             FROM borrows b 
@@ -251,7 +253,8 @@ router.post('/return/:borrowId', isLibrarian, async (req, res) => {
             `UPDATE borrows 
              SET status = "returned", 
                  return_date = CURRENT_TIMESTAMP,
-                 fine_amount = ?
+                 fine_amount = ?,
+                 last_notification_date = NULL
              WHERE id = ?`,
             [fineAmount, req.params.borrowId]
         );

@@ -50,6 +50,8 @@ CREATE TABLE borrows (
     due_date TIMESTAMP NULL,
     return_date TIMESTAMP NULL,
     status ENUM('requested', 'borrowed', 'returned', 'overdue', 'cancelled') NOT NULL DEFAULT 'requested',
+    fine_amount DECIMAL(10,2) DEFAULT 0.00,
+    last_notification_date DATE NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (book_id) REFERENCES books(id),
@@ -57,6 +59,21 @@ CREATE TABLE borrows (
     FOREIGN KEY (approved_by) REFERENCES users(id)
 );
 
--- Insert default admin user with unencrypted password
+-- Insert default admin user
 INSERT INTO users (username, password, email, full_name, role, is_verified)
-VALUES ('admin', 'admin123', 'admin@library.com', 'Admin User', 'admin', TRUE); 
+VALUES ('admin', 'admin123', 'admin@library.com', 'Admin User', 'admin', TRUE);
+
+-- Insert default librarian
+INSERT INTO users (username, password, email, full_name, role, is_verified)
+VALUES ('librarian', 'librarian123', 'librarian@library.com', 'Librarian User', 'librarian', TRUE);
+
+-- Insert sample student
+INSERT INTO users (username, password, email, full_name, role, is_verified, student_id)
+VALUES ('student', 'student123', 'student@library.com', 'Student User', 'student', TRUE, 'SV001');
+
+-- Insert sample books
+INSERT INTO books (title, author, isbn, category, quantity, available_quantity, description)
+VALUES 
+('Lập Trình Web với Node.js', 'John Doe', '978-1234567890', 'Technology', 5, 5, 'Sách về lập trình web với Node.js'),
+('Cơ Sở Dữ Liệu', 'Jane Smith', '978-0987654321', 'Computer Science', 3, 3, 'Sách về cơ sở dữ liệu'),
+('Lập Trình Python', 'Mike Johnson', '978-1122334455', 'Programming', 4, 4, 'Sách về lập trình Python'); 
