@@ -8,7 +8,12 @@ router.get('/', isLibrarian, async (req, res) => {
     try {
         const [borrows] = await db.execute(`
             SELECT b.*, u.username, u.full_name, bk.title,
-                   a.full_name as approver_name
+                   a.full_name as approver_name,
+                   CASE 
+                       WHEN b.status = 'overdue' AND b.due_date < CURRENT_TIMESTAMP 
+                       THEN DATEDIFF(CURRENT_TIMESTAMP, b.due_date) * 5000
+                       ELSE b.fine_amount 
+                   END as current_fine
             FROM borrows b 
             JOIN users u ON b.user_id = u.id 
             JOIN books bk ON b.book_id = bk.id 
@@ -234,10 +239,21 @@ router.post('/return/:borrowId', isLibrarian, async (req, res) => {
             return res.redirect('/borrows');
         }
 
+        // Calculate fine if returned late
+        let fineAmount = 0;
+        if (borrow.due_date && new Date() > new Date(borrow.due_date)) {
+            const daysLate = Math.ceil((new Date() - new Date(borrow.due_date)) / (1000 * 60 * 60 * 24));
+            fineAmount = daysLate * 5000; // 5000 VND per day
+        }
+
         // Update borrow record
         await db.execute(
-            'UPDATE borrows SET status = "returned", return_date = CURRENT_TIMESTAMP WHERE id = ?',
-            [req.params.borrowId]
+            `UPDATE borrows 
+             SET status = "returned", 
+                 return_date = CURRENT_TIMESTAMP,
+                 fine_amount = ?
+             WHERE id = ?`,
+            [fineAmount, req.params.borrowId]
         );
 
         // Update book available quantity
@@ -246,7 +262,11 @@ router.post('/return/:borrowId', isLibrarian, async (req, res) => {
             [borrow.book_id]
         );
 
-        req.flash('success_msg', 'Book returned successfully');
+        if (fineAmount > 0) {
+            req.flash('warning_msg', `Book returned successfully. Late return fine: ${fineAmount.toLocaleString('vi-VN')} VND`);
+        } else {
+            req.flash('success_msg', 'Book returned successfully');
+        }
         res.redirect('/borrows');
     } catch (error) {
         console.error(error);

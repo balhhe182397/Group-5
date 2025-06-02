@@ -19,6 +19,7 @@
                             <li>Please select a pickup date and time</li>
                             <li>Your request will need to be approved by a librarian</li>
                             <li>Please bring your student/lecturer ID when picking up the book</li>
+                            <li>Expected return date will be automatically set to 14 days after pickup</li>
                         </ul>
                     </div>
 
@@ -31,10 +32,18 @@
                                    name="pickup_date" 
                                    required
                                    min="<%= new Date().toISOString().slice(0, 16) %>"
-                                   max="<%= new Date(Date.now() + 7*24*60*60*1000).toISOString().slice(0, 16) %>">
+                                   max="<%= new Date(Date.now() + 7*24*60*60*1000).toISOString().slice(0, 16) %>"
+                                   onchange="updateReturnDate(this.value)">
                             <small class="form-text text-muted">
                                 Please select a date and time within the next 7 days
                             </small>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label class="form-label">Expected Return Date:</label>
+                            <div id="return_date" class="form-control bg-light">
+                                Please select a pickup date first
+                            </div>
                         </div>
 
                         <div class="form-group">
@@ -47,5 +56,24 @@
         </div>
     </div>
 </div>
+
+<script>
+function updateReturnDate(pickupDate) {
+    if (!pickupDate) return;
+    
+    const pickup = new Date(pickupDate);
+    const returnDate = new Date(pickup);
+    returnDate.setDate(returnDate.getDate() + 14);
+    
+    document.getElementById('return_date').textContent = 
+        returnDate.toLocaleString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+}
+</script>
 
 <%- include('../layouts/footer') %> 

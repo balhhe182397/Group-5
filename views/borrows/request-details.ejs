@@ -41,7 +41,10 @@
                                 <p><strong>Request Date:</strong> <%= new Date(borrow.request_date).toLocaleString() %></p>
                                 <p><strong>Pickup Date:</strong> <%= new Date(borrow.pickup_date).toLocaleString() %></p>
                                 <% if (borrow.due_date) { %>
-                                    <p><strong>Due Date:</strong> <%= new Date(borrow.due_date).toLocaleString() %></p>
+                                    <p class="text-primary"><strong>Return Date:</strong> <%= new Date(borrow.due_date).toLocaleString() %></p>
+                                <% } %>
+                                <% if (borrow.fine_amount > 0) { %>
+                                    <p class="text-danger"><strong>Late Return Fine:</strong> <%= borrow.fine_amount.toLocaleString('vi-VN') %> VND</p>
                                 <% } %>
                             </div>
                         </div>

@@ -12,7 +12,9 @@
                     <th>Book</th>
                     <th>Request Date</th>
                     <th>Pickup Date</th>
+                    <th>Due Date</th>
                     <th>Status</th>
+                    <th>Fine Amount</th>
                     <th>Approval</th>
                     <th>Actions</th>
                 </tr>
@@ -32,6 +34,13 @@
                             <% } %>
                         </td>
                         <td>
+                            <% if (borrow.due_date) { %>
+                                <%= new Date(borrow.due_date).toLocaleString() %>
+                            <% } else { %>
+                                -
+                            <% } %>
+                        </td>
+                        <td>
                             <span class="badge bg-<%= 
                                 borrow.status === 'requested' ? 'warning' :
                                 borrow.status === 'borrowed' ? 'primary' :
@@ -41,6 +50,15 @@
                             %>">
                                 <%= borrow.status.charAt(0).toUpperCase() + borrow.status.slice(1) %>
                             </span>
+                        </td>
+                        <td>
+                            <% if (borrow.current_fine > 0) { %>
+                                <span class="text-danger fw-bold">
+                                    <%= borrow.current_fine.toLocaleString('vi-VN') %> VND
+                                </span>
+                            <% } else { %>
+                                -
+                            <% } %>
                         </td>
                         <td>
                             <% if (borrow.approval_status === 'pending') { %>
@@ -71,7 +89,7 @@
                                             <i class="fas fa-times me-1"></i> Reject
                                         </button>
                                     </form>
-                                <% } else if (borrow.status === 'borrowed') { %>
+                                <% } else if (borrow.status === 'borrowed' || borrow.status === 'overdue') { %>
                                     <form action="/borrows/return/<%= borrow.id %>" method="POST" class="d-inline">
                                         <button type="submit" class="btn btn-primary btn-sm">
                                             <i class="fas fa-undo me-1"></i> Return
