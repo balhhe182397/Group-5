@@ -1,0 +1,34 @@
+<%- include('../../layouts/header') %>
+
+<div class="container mt-4">
+    <h2>Users Report</h2>
+    
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Role</th>
+                            <th>Total Users</th>
+                            <th>Verified Users</th>
+                            <th>Unverified Users</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% users.forEach(user => { %>
+                            <tr>
+                                <td><%= user.role.charAt(0).toUpperCase() + user.role.slice(1) %></td>
+                                <td><%= user.count %></td>
+                                <td><%= user.verified_count %></td>
+                                <td><%= user.count - user.verified_count %></td>
+                            </tr>
+                        <% }); %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<%- include('../../layouts/footer') %> 

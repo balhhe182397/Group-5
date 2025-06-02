@@ -1,0 +1,44 @@
+<%- include('../../layouts/header') %>
+
+<div class="container mt-4">
+    <h2>Borrows Report</h2>
+    
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Book Title</th>
+                            <th>Borrower</th>
+                            <th>Borrow Date</th>
+                            <th>Due Date</th>
+                            <th>Return Date</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% borrows.forEach(borrow => { %>
+                            <tr>
+                                <td><%= borrow.title %></td>
+                                <td><%= borrow.full_name %></td>
+                                <td><%= new Date(borrow.borrow_date).toLocaleDateString() %></td>
+                                <td><%= new Date(borrow.due_date).toLocaleDateString() %></td>
+                                <td><%= borrow.return_date ? new Date(borrow.return_date).toLocaleDateString() : 'Not returned' %></td>
+                                <td>
+                                    <% if (borrow.return_date) { %>
+                                        <span class="badge bg-success">Returned</span>
+                                    <% } else { %>
+                                        <span class="badge bg-warning">Active</span>
+                                    <% } %>
+                                </td>
+                            </tr>
+                        <% }); %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<%- include('../../layouts/footer') %> 
