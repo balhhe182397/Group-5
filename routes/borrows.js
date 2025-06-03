@@ -61,7 +61,14 @@ router.get('/request/:borrowId', isLibrarian, async (req, res) => {
 router.get('/my-borrows', isAuthenticated, async (req, res) => {
     try {
         const [borrows] = await db.execute(`
-            SELECT b.*, bk.title 
+            SELECT b.*, bk.title,
+                   CASE 
+                       WHEN b.status IN ('borrowed', 'overdue') AND b.due_date < CURRENT_TIMESTAMP 
+                       THEN DATEDIFF(CURRENT_TIMESTAMP, b.due_date) * 5000
+                       WHEN b.status = 'returned' AND b.due_date < b.return_date
+                       THEN DATEDIFF(b.return_date, b.due_date) * 5000
+                       ELSE b.fine_amount 
+                   END as current_fine
             FROM borrows b 
             JOIN books bk ON b.book_id = bk.id 
             WHERE b.user_id = ? 

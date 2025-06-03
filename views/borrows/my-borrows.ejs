@@ -5,9 +5,11 @@
             <thead>
                 <tr>
                     <th>Book</th>
-                    <th>Borrow Date</th>
+                    <th>Request Date</th>
+                    <th>Pickup Date</th>
                     <th>Due Date</th>
                     <th>Return Date</th>
+                    <th>Fine Amount</th>
                     <th>Status</th>
                 </tr>
             </thead>
@@ -15,18 +17,30 @@
                 <% if (borrows && borrows.length > 0) { %>
                     <% borrows.forEach(borrow => { %>
                         <tr>
-                            <td><%= borrow.book_title %></td>
-                            <td><%= new Date(borrow.borrow_date).toLocaleDateString() %></td>
-                            <td><%= new Date(borrow.due_date).toLocaleDateString() %></td>
+                            <td><%= borrow.title %></td>
+                            <td><%= new Date(borrow.request_date).toLocaleDateString() %></td>
+                            <td><%= borrow.pickup_date ? new Date(borrow.pickup_date).toLocaleDateString() : '-' %></td>
+                            <td><%= borrow.due_date ? new Date(borrow.due_date).toLocaleDateString() : '-' %></td>
+                            <td><%= borrow.return_date ? new Date(borrow.return_date).toLocaleDateString() : '-' %></td>
                             <td>
-                                <%= borrow.return_date ? new Date(borrow.return_date).toLocaleDateString() : '-' %>
+                                <% if (borrow.current_fine > 0) { %>
+                                    <span class="text-danger fw-bold">
+                                        <%= borrow.current_fine.toLocaleString('vi-VN') %> VND
+                                    </span>
+                                <% } else { %>
+                                    -
+                                <% } %>
                             </td>
                             <td>
-                                <% if (borrow.return_date) { %>
+                                <% if (borrow.status === 'returned') { %>
                                     <span class="badge bg-success">Returned</span>
-                                <% } else if (new Date(borrow.due_date) < new Date()) { %>
+                                <% } else if (borrow.status === 'requested') { %>
+                                    <span class="badge bg-warning">Pending</span>
+                                <% } else if (borrow.status === 'cancelled') { %>
+                                    <span class="badge bg-secondary">Cancelled</span>
+                                <% } else if (borrow.status === 'borrowed' && new Date(borrow.due_date) < new Date()) { %>
                                     <span class="badge bg-danger">Overdue</span>
-                                <% } else { %>
+                                <% } else if (borrow.status === 'borrowed') { %>
                                     <span class="badge bg-primary">Borrowed</span>
                                 <% } %>
                             </td>
@@ -34,7 +48,7 @@
                     <% }); %>
                 <% } else { %>
                     <tr>
-                        <td colspan="5" class="text-center">
+                        <td colspan="7" class="text-center">
                             <div class="alert alert-info mb-0">
                                 <i class="fas fa-info-circle me-2"></i> You haven't borrowed any books yet. 
                                 <a href="/books" class="alert-link">Browse books</a> to get started.
