@@ -51,12 +51,16 @@ CREATE TABLE borrows (
     return_date TIMESTAMP NULL,
     status ENUM('requested', 'borrowed', 'returned', 'overdue', 'cancelled') NOT NULL DEFAULT 'requested',
     fine_amount DECIMAL(10,2) DEFAULT 0.00,
+    payment_status ENUM('pending', 'paid', 'cancelled') DEFAULT 'pending',
+    payment_date TIMESTAMP NULL,
+    payment_confirmed_by INT NULL,
     last_notification_date DATE NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (book_id) REFERENCES books(id),
     FOREIGN KEY (user_id) REFERENCES users(id),
-    FOREIGN KEY (approved_by) REFERENCES users(id)
+    FOREIGN KEY (approved_by) REFERENCES users(id),
+    FOREIGN KEY (payment_confirmed_by) REFERENCES users(id)
 );
 
 -- Insert default admin user

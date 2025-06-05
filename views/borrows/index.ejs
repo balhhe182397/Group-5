@@ -1,5 +1,3 @@
-
-
 <div class="container mt-4">
     <h2>Borrow Requests</h2>
     
@@ -56,6 +54,17 @@
                                 <span class="text-danger fw-bold">
                                     <%= borrow.current_fine.toLocaleString('vi-VN') %> VND
                                 </span>
+                                <% if (borrow.payment_status === 'pending') { %>
+                                    <div class="mt-2">
+                                        <a href="/borrows/payments" class="btn btn-info btn-sm">
+                                            <i class="fas fa-money-bill-wave me-1"></i>Manage Payment
+                                        </a>
+                                    </div>
+                                <% } else if (borrow.payment_status === 'paid') { %>
+                                    <span class="badge bg-success">Paid</span>
+                                <% } else if (borrow.payment_status === 'cancelled') { %>
+                                    <span class="badge bg-danger">Rejected</span>
+                                <% } %>
                             <% } else { %>
                                 -
                             <% } %>
@@ -105,4 +114,8 @@
     </div>
 </div>
 
-<%- include('../layouts/footer') %> 
+<%- include('../layouts/footer') %>
+
+<script>
+// Remove the confirmPayment and rejectPayment functions since they're no longer needed
+</script> 

@@ -36,4 +36,11 @@ router.get('/', async (req, res) => {
     }
 });
 
+// Contact page
+router.get('/contact', (req, res) => {
+    res.render('contact', {
+        user: req.session.user
+    });
+});
+
 module.exports = router; 

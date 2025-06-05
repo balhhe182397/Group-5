@@ -159,6 +159,147 @@
             border-color: var(--secondary-color);
             box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
         }
+
+        /* Support Button Styles */
+        .support-button {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #2c3e50, #3498db);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .support-button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        .support-popup {
+            position: fixed;
+            bottom: 100px;
+            right: 30px;
+            width: 300px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 25px rgba(0,0,0,0.2);
+            z-index: 1000;
+            display: none;
+            animation: slideIn 0.3s ease;
+        }
+
+        .support-popup.active {
+            display: block;
+        }
+
+        .support-popup-header {
+            padding: 15px 20px;
+            background: linear-gradient(135deg, #2c3e50, #3498db);
+            color: white;
+            border-radius: 15px 15px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .support-popup-header h5 {
+            margin: 0;
+            font-size: 1.1rem;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 0;
+            line-height: 1;
+        }
+
+        .support-popup-body {
+            padding: 20px;
+        }
+
+        .support-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .support-item:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+        .support-item i {
+            font-size: 1.2rem;
+            margin-right: 15px;
+            margin-top: 3px;
+        }
+
+        .support-item h6 {
+            margin: 0 0 5px 0;
+            color: #2c3e50;
+            font-size: 0.9rem;
+        }
+
+        .support-item a {
+            color: #3498db;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.3s ease;
+        }
+
+        .support-item a:hover {
+            color: #2980b9;
+        }
+
+        .support-item p {
+            margin: 0;
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .support-button {
+                width: 50px;
+                height: 50px;
+                font-size: 20px;
+                bottom: 20px;
+                right: 20px;
+            }
+            
+            .support-popup {
+                width: 280px;
+                bottom: 80px;
+                right: 20px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -179,6 +320,9 @@
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="/books"><i class="fas fa-books me-1"></i> Books</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/contact"><i class="fas fa-envelope me-1"></i> Contact</a>
                     </li>
                     <% if (user) { %>
                         <li class="nav-item">
@@ -268,7 +412,70 @@
         </div>
     </footer>
 
+    <!-- Floating Chat Support Button -->
+    <div class="support-button" id="supportButton">
+        <i class="fas fa-headset"></i>
+    </div>
+
+    <div class="support-popup" id="supportPopup">
+        <div class="support-popup-content">
+            <div class="support-popup-header">
+                <h5><i class="fas fa-headset me-2"></i>Hỗ Trợ Trực Tuyến</h5>
+                <button class="close-btn" id="closeSupport">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="support-popup-body">
+                <div class="support-item">
+                    <i class="fas fa-phone-alt text-primary"></i>
+                    <div>
+                        <h6>Điện Thoại</h6>
+                        <a href="tel:+84989888999">+84 989 888 999</a>
+                    </div>
+                </div>
+                <div class="support-item">
+                    <i class="fas fa-envelope text-primary"></i>
+                    <div>
+                        <h6>Email</h6>
+                        <a href="mailto:thuvien@gmail.com">thuvien@gmail.com</a>
+                    </div>
+                </div>
+                <div class="support-item">
+                    <i class="fas fa-clock text-primary"></i>
+                    <div>
+                        <h6>Giờ Làm Việc</h6>
+                        <p>8:00 - 17:00 (Thứ 2 - Thứ 6)</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Support Button Script -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const supportButton = document.getElementById('supportButton');
+        const supportPopup = document.getElementById('supportPopup');
+        const closeSupport = document.getElementById('closeSupport');
+
+        supportButton.addEventListener('click', function() {
+            supportPopup.classList.toggle('active');
+        });
+
+        closeSupport.addEventListener('click', function() {
+            supportPopup.classList.remove('active');
+        });
+
+        // Close popup when clicking outside
+        document.addEventListener('click', function(event) {
+            if (!supportButton.contains(event.target) && !supportPopup.contains(event.target)) {
+                supportPopup.classList.remove('active');
+            }
+        });
+    });
+    </script>
 </body>
 </html> 

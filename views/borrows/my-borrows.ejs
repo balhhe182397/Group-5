@@ -11,6 +11,7 @@
                     <th>Return Date</th>
                     <th>Fine Amount</th>
                     <th>Status</th>
+                    <th>Action</th>
                 </tr>
             </thead>
             <tbody>
@@ -44,11 +45,85 @@
                                     <span class="badge bg-primary">Borrowed</span>
                                 <% } %>
                             </td>
+                            <td>
+                                <% if (borrow.current_fine > 0) { %>
+                                    <button class="btn btn-primary btn-sm" 
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#paymentModal<%= borrow.id %>">
+                                        Pay Fine
+                                    </button>
+                                <% } %>
+                            </td>
                         </tr>
+
+                        <!-- Payment Modal for each borrow -->
+                        <% if (borrow.current_fine > 0) { %>
+                            <div class="modal fade" id="paymentModal<%= borrow.id %>" tabindex="-1" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title">Payment Details</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <div class="text-center mb-4">
+                                                <h6>Fine Amount: <span class="text-danger fw-bold"><%= borrow.current_fine.toLocaleString('vi-VN') %> VND</span></h6>
+                                                <p class="text-muted">Please transfer the amount to the following account:</p>
+                                            </div>
+                                            
+                                            <div class="card mb-3">
+                                                <div class="card-body">
+                                                    <div class="row mb-2">
+                                                        <div class="col-4 fw-bold">Account Name:</div>
+                                                        <div class="col-8">NGUYEN VAN HOI</div>
+                                                    </div>
+                                                    <div class="row mb-2">
+                                                        <div class="col-4 fw-bold">Account Number:</div>
+                                                        <div class="col-8">633333363</div>
+                                                    </div>
+                                                    <div class="row mb-2">
+                                                        <div class="col-4 fw-bold">Bank:</div>
+                                                        <div class="col-8">MB BANK</div>
+                                                    </div>
+                                                    <div class="row">
+                                                        <div class="col-4 fw-bold">Transfer Content:</div>
+                                                        <div class="col-8">FINE_<%= borrow.id %></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="text-center">
+                                                <img src="https://img.vietqr.io/image/MB-633333363-<%= borrow.current_fine %>-FINE_<%= borrow.id %>.png" 
+                                                     alt="VietQR Code" 
+                                                     class="img-fluid mb-3" 
+                                                     style="max-width: 200px;">
+                                                <p class="text-muted small">Scan QR code to pay</p>
+                                            </div>
+
+                                            <div class="alert alert-info">
+                                                <i class="fas fa-info-circle me-2"></i>
+                                                After payment, please click the button below to request payment confirmation.
+                                            </div>
+
+                                            <div class="text-center">
+                                                <button class="btn btn-success" 
+                                                        onclick="requestPaymentConfirmation(<%= borrow.id %>, <%= borrow.current_fine %>)"
+                                                        id="confirmBtn<%= borrow.id %>">
+                                                    <i class="fas fa-check-circle me-2"></i>I have paid
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        <% } %>
                     <% }); %>
                 <% } else { %>
                     <tr>
-                        <td colspan="7" class="text-center">
+                        <td colspan="8" class="text-center">
                             <div class="alert alert-info mb-0">
                                 <i class="fas fa-info-circle me-2"></i> You haven't borrowed any books yet. 
                                 <a href="/books" class="alert-link">Browse books</a> to get started.
@@ -59,4 +134,47 @@
             </tbody>
         </table>
     </div>
-</div> 
+</div>
+
+<!-- Toast Notification -->
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+    <div id="paymentToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-header">
+            <i class="fas fa-info-circle me-2"></i>
+            <strong class="me-auto">Notification</strong>
+            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body"></div>
+    </div>
+</div>
+
+<script>
+function requestPaymentConfirmation(borrowId, amount) {
+    fetch(`/borrows/request-payment-confirmation/${borrowId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ amount })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const toast = new bootstrap.Toast(document.getElementById('paymentToast'));
+            document.querySelector('#paymentToast .toast-body').textContent = data.message;
+            toast.show();
+            
+            // Disable the confirm button
+            document.getElementById(`confirmBtn${borrowId}`).disabled = true;
+            document.getElementById(`confirmBtn${borrowId}`).innerHTML = 
+                '<i class="fas fa-clock me-2"></i>Waiting for confirmation';
+        } else {
+            alert(data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while requesting payment confirmation');
+    });
+}
+</script> 
