@@ -7,6 +7,30 @@
             </a>
         </div>
         <div class="card-body">
+            <!-- Search and Sort Form -->
+            <form action="/users" method="GET" class="mb-4">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <div class="input-group">
+                            <input type="text" class="form-control" name="search" placeholder="Search by email..." value="<%= search || '' %>">
+                            <button class="btn btn-primary" type="submit">
+                                <i class="fas fa-search"></i> Search
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="input-group">
+                            <label class="input-group-text py-0 px-2" for="sort">Sort:</label>
+                            <select class="form-select form-select-sm" name="sort" id="sort" onchange="this.form.submit()">
+                                <option value="">Default</option>
+                                <option value="asc" <%= sort === 'asc' ? 'selected' : '' %>>A-Z</option>
+                                <option value="desc" <%= sort === 'desc' ? 'selected' : '' %>>Z-A</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </form>
+
             <div class="table-responsive">
                 <table class="table table-hover">
                     <thead>

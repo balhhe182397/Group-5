@@ -356,26 +356,38 @@ router.post('/reset-password/:token', async (req, res) => {
     }
 });
 
-// View all users (admin only)
+// Get all users (admin only)
 router.get('/', isAdmin, async (req, res) => {
     try {
-        const [users] = await db.query(`
-            SELECT 
-                id,
-                username,
-                email,
-                full_name,
-                role,
-                is_verified,
-                created_at
-            FROM users 
-            ORDER BY created_at DESC
-        `);
-        res.render('users/index', { users });
+        const { search, sort } = req.query;
+        let query = 'SELECT * FROM users';
+        const params = [];
+
+        // Add search condition if search parameter exists
+        if (search) {
+            query += ' WHERE email LIKE ?';
+            params.push(`%${search}%`);
+        }
+
+        // Add sorting
+        if (sort === 'asc') {
+            query += ' ORDER BY full_name ASC';
+        } else if (sort === 'desc') {
+            query += ' ORDER BY full_name DESC';
+        } else {
+            query += ' ORDER BY created_at DESC';
+        }
+
+        const [users] = await db.query(query, params);
+        res.render('users/index', { 
+            users,
+            search: search || '',
+            sort: sort || ''
+        });
     } catch (err) {
         console.error(err);
         req.flash('error_msg', 'An error occurred while fetching users');
-        res.redirect('/admin');
+        res.redirect('/');
     }
 });
 
