@@ -714,4 +714,32 @@ router.post('/reject-payment/:id', isLibrarian, async (req, res) => {
     }
 });
 
+// Pending borrows (for admin/librarian)
+router.get('/pending', isLibrarian, async (req, res) => {
+    try {
+        const [borrows] = await db.execute(`
+            SELECT b.*, u.username, u.full_name, bk.title,
+                   a.full_name as approver_name,
+                   CASE 
+                       WHEN b.status IN ('borrowed', 'overdue') AND b.due_date < CURRENT_TIMESTAMP 
+                       THEN DATEDIFF(CURRENT_TIMESTAMP, b.due_date) * 5000
+                       WHEN b.status = 'returned' AND b.due_date < b.return_date
+                       THEN DATEDIFF(b.return_date, b.due_date) * 5000
+                       ELSE b.fine_amount 
+                   END as current_fine
+            FROM borrows b 
+            JOIN users u ON b.user_id = u.id 
+            JOIN books bk ON b.book_id = bk.id 
+            LEFT JOIN users a ON b.approved_by = a.id
+            WHERE b.approval_status = 'pending'
+            ORDER BY b.request_date DESC
+        `);
+        res.render('borrows/pending', { borrows });
+    } catch (error) {
+        console.error(error);
+        req.flash('error_msg', 'Error loading pending borrows');
+        res.redirect('/borrows');
+    }
+});
+
 module.exports = router; 

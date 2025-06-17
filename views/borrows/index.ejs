@@ -1,8 +1,13 @@
+<!-- DataTables CSS & JS -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+
 <div class="container mt-4">
     <h2>Borrow Requests</h2>
     
     <div class="table-responsive">
-        <table class="table table-striped">
+        <table id="adminTable" class="table table-striped">
             <thead>
                 <tr>
                     <th>ID</th>
@@ -113,6 +118,12 @@
         </table>
     </div>
 </div>
+
+<script>
+$(document).ready(function() {
+    $('#adminTable').DataTable();
+});
+</script>
 
 <%- include('../layouts/footer') %>
 

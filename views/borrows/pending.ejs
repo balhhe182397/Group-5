@@ -1,0 +1,111 @@
+<!-- DataTables CSS & JS -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+
+<div class="container mt-4">
+    <h2>Pending Borrow Requests</h2>
+    <div class="table-responsive">
+        <table id="adminTable" class="table table-striped">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>User</th>
+                    <th>Book</th>
+                    <th>Request Date</th>
+                    <th>Pickup Date</th>
+                    <th>Due Date</th>
+                    <th>Status</th>
+                    <th>Fine Amount</th>
+                    <th>Approval</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% if (borrows.length > 0) { %>
+                    <% borrows.forEach(borrow => { %>
+                        <tr>
+                            <td><%= borrow.id %></td>
+                            <td><%= borrow.full_name %></td>
+                            <td><%= borrow.title %></td>
+                            <td><%= new Date(borrow.request_date).toLocaleString() %></td>
+                            <td>
+                                <% if (borrow.pickup_date) { %>
+                                    <%= new Date(borrow.pickup_date).toLocaleString() %>
+                                <% } else { %>
+                                    -
+                                <% } %>
+                            </td>
+                            <td>
+                                <% if (borrow.due_date) { %>
+                                    <%= new Date(borrow.due_date).toLocaleString() %>
+                                <% } else { %>
+                                    -
+                                <% } %>
+                            </td>
+                            <td>
+                                <span class="badge bg-warning">Pending</span>
+                            </td>
+                            <td>
+                                <% if (borrow.current_fine > 0) { %>
+                                    <span class="text-danger fw-bold">
+                                        <%= borrow.current_fine.toLocaleString('vi-VN') %> VND
+                                    </span>
+                                    <% if (borrow.payment_status === 'pending') { %>
+                                        <div class="mt-2">
+                                            <a href="/borrows/payments" class="btn btn-info btn-sm">
+                                                <i class="fas fa-money-bill-wave me-1"></i>Manage Payment
+                                            </a>
+                                        </div>
+                                    <% } else if (borrow.payment_status === 'paid') { %>
+                                        <span class="badge bg-success">Paid</span>
+                                    <% } else if (borrow.payment_status === 'cancelled') { %>
+                                        <span class="badge bg-danger">Rejected</span>
+                                    <% } %>
+                                <% } else { %>
+                                    -
+                                <% } %>
+                            </td>
+                            <td>
+                                <span class="badge bg-warning">Pending</span>
+                            </td>
+                            <td>
+                                <div class="btn-group">
+                                    <a href="/borrows/request/<%= borrow.id %>" class="btn btn-info btn-sm">
+                                        <i class="fas fa-eye me-1"></i> View
+                                    </a>
+                                    <form action="/borrows/approve/<%= borrow.id %>" method="POST" class="d-inline">
+                                        <button type="submit" class="btn btn-success btn-sm">
+                                            <i class="fas fa-check me-1"></i> Approve
+                                        </button>
+                                    </form>
+                                    <form action="/borrows/reject/<%= borrow.id %>" method="POST" class="d-inline">
+                                        <button type="submit" class="btn btn-danger btn-sm">
+                                            <i class="fas fa-times me-1"></i> Reject
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    <% }); %>
+                <% } else { %>
+                    <tr>
+                        <td colspan="10" class="text-center">
+                            <div class="alert alert-info mb-0">
+                                <i class="fas fa-info-circle me-2"></i> No pending borrow requests.
+                            </div>
+                        </td>
+                    </tr>
+                <% } %>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+$(document).ready(function() {
+    $('#adminTable').DataTable();
+});
+</script>
+
+<%- include('../layouts/footer') %> 

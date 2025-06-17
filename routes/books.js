@@ -43,7 +43,17 @@ router.get('/', async (req, res) => {
 
         query += ' ORDER BY title ASC';
         const [books] = await db.query(query, params);
-        res.render('books/index', { books, search });
+
+        // Get all categories for the filter dropdown
+        const [categories] = await db.query('SELECT DISTINCT category FROM books WHERE category IS NOT NULL');
+
+        res.render('books/index', { 
+            books, 
+            searchQuery: search,
+            selectedCategory: '',
+            sortBy: 'title',
+            categories: categories.map(c => c.category)
+        });
     } catch (err) {
         console.error(err);
         req.flash('error_msg', 'An error occurred while fetching books');
@@ -133,6 +143,75 @@ router.post('/delete/:id', isAdmin, async (req, res) => {
     } catch (err) {
         console.error(err);
         req.flash('error_msg', 'An error occurred while deleting book');
+        res.redirect('/books');
+    }
+});
+
+// Search books with filters
+router.get('/search', async (req, res) => {
+    try {
+        const { search, category, sort } = req.query;
+        let query = `
+            SELECT b.*, COUNT(br.id) as borrow_count 
+            FROM books b 
+            LEFT JOIN borrows br ON b.id = br.book_id 
+        `;
+        let params = [];
+        let whereConditions = [];
+
+        // Add search condition
+        if (search) {
+            whereConditions.push('(b.title LIKE ? OR b.author LIKE ? OR b.isbn LIKE ?)');
+            params.push(`%${search}%`, `%${search}%`, `%${search}%`);
+        }
+
+        // Add category filter
+        if (category) {
+            whereConditions.push('b.category = ?');
+            params.push(category);
+        }
+
+        // Add WHERE clause if there are conditions
+        if (whereConditions.length > 0) {
+            query += ' WHERE ' + whereConditions.join(' AND ');
+        }
+
+        // Add GROUP BY
+        query += ' GROUP BY b.id';
+
+        // Add sorting
+        switch (sort) {
+            case 'borrows':
+                query += ' ORDER BY borrow_count DESC';
+                break;
+            case 'recent':
+                query += ' ORDER BY b.created_at DESC';
+                break;
+            case 'title':
+                query += ' ORDER BY b.title ASC';
+                break;
+            case 'author':
+                query += ' ORDER BY b.author ASC';
+                break;
+            default:
+                query += ' ORDER BY borrow_count DESC';
+        }
+
+        const [books] = await db.query(query, params);
+
+        // Get all categories for the filter dropdown
+        const [categories] = await db.query('SELECT DISTINCT category FROM books WHERE category IS NOT NULL');
+
+        res.render('books/index', {
+            books,
+            searchQuery: search,
+            selectedCategory: category,
+            sortBy: sort,
+            categories: categories.map(c => c.category)
+        });
+    } catch (err) {
+        console.error(err);
+        req.flash('error_msg', 'An error occurred while searching books');
         res.redirect('/books');
     }
 });

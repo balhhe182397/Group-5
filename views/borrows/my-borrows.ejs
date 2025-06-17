@@ -10,6 +10,7 @@
                     <th>Due Date</th>
                     <th>Return Date</th>
                     <th>Fine Amount</th>
+                    <th>Payment Status</th>
                     <th>Status</th>
                     <th>Action</th>
                 </tr>
@@ -28,6 +29,21 @@
                                     <span class="text-danger fw-bold">
                                         <%= borrow.current_fine.toLocaleString('vi-VN') %> VND
                                     </span>
+                                <% } else { %>
+                                    -
+                                <% } %>
+                            </td>
+                            <td>
+                                <% if (borrow.current_fine > 0) { %>
+                                    <% if (!borrow.payment_status || borrow.payment_status === '') { %>
+                                        <span class="badge bg-secondary">Not Paid</span>
+                                    <% } else if (borrow.payment_status === 'pending') { %>
+                                        <span class="badge bg-warning">Pending Confirmation</span>
+                                    <% } else if (borrow.payment_status === 'paid') { %>
+                                        <span class="badge bg-success">Payment Approved</span>
+                                    <% } else if (borrow.payment_status === 'cancelled') { %>
+                                        <span class="badge bg-danger">Payment Rejected</span>
+                                    <% } %>
                                 <% } else { %>
                                     -
                                 <% } %>
