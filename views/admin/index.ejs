@@ -86,26 +86,6 @@
             </div>
         </div>
 
-        <!-- Borrows Management -->
-        <div class="col-md-6 mb-4">
-            <div class="card admin-card h-100">
-                <div class="card-body">
-                    <h5 class="card-title">
-                        <i class="fas fa-bookmark me-2 text-success"></i>Borrows Management
-                    </h5>
-                    <p class="card-text text-muted">Track and manage book borrows</p>
-                    <div class="admin-actions">
-                        <a href="/borrows" class="btn btn-outline-success">
-                            <i class="fas fa-list me-2"></i>View All Borrows
-                        </a>
-                        <a href="/borrows/pending" class="btn btn-outline-success">
-                            <i class="fas fa-clock me-2"></i>Pending Returns
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-
         <!-- User Management -->
         <div class="col-md-6 mb-4">
             <div class="card admin-card h-100">
@@ -140,26 +120,6 @@
                         </a>
                         <a href="/admin/reports/users" class="btn btn-outline-warning">
                             <i class="fas fa-chart-pie me-2"></i>User Statistics
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Payment Management -->
-        <div class="col-md-6 mb-4">
-            <div class="card admin-card h-100">
-                <div class="card-body">
-                    <h5 class="card-title">
-                        <i class="fas fa-money-bill-wave me-2 text-danger"></i>Payment Management
-                    </h5>
-                    <p class="card-text text-muted">Manage fine payments and confirmations</p>
-                    <div class="admin-actions">
-                        <a href="/borrows/payments" class="btn btn-outline-danger">
-                            <i class="fas fa-list me-2"></i>View All Payments
-                        </a>
-                        <a href="/borrows/payments?status=pending" class="btn btn-outline-danger">
-                            <i class="fas fa-clock me-2"></i>Pending Payments
                         </a>
                     </div>
                 </div>
@@ -218,5 +178,9 @@
 .card-text {
     font-size: 0.9rem;
     margin-bottom: 1rem;
+}
+
+.opacity-50 {
+    opacity: 0.5;
 }
 </style>

@@ -1,0 +1,118 @@
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="text-warning mb-3">
+                <i class="fas fa-clock me-2"></i>Pending Borrow Requests
+            </h2>
+            <p class="text-muted">Review and approve/reject borrow requests from users</p>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex gap-2 flex-wrap">
+                        <a href="/librarian/borrows" class="btn btn-primary">
+                            <i class="fas fa-list me-2"></i>All Borrows
+                        </a>
+                        <a href="/librarian/borrows/overdue" class="btn btn-danger">
+                            <i class="fas fa-exclamation-triangle me-2"></i>Overdue Books
+                        </a>
+                        <a href="/librarian" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pending Requests -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">
+                <i class="fas fa-hourglass-half me-2"></i>Pending Requests (<%= borrows.length %>)
+            </h5>
+        </div>
+        <div class="card-body">
+            <% if (borrows && borrows.length > 0) { %>
+                <div class="row">
+                    <% borrows.forEach(borrow => { %>
+                        <div class="col-md-6 mb-4">
+                            <div class="card border-warning">
+                                <div class="card-header bg-warning text-white">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <h6 class="mb-0">
+                                            <i class="fas fa-user me-2"></i><%= borrow.full_name %>
+                                        </h6>
+                                        <small><%= new Date(borrow.request_date).toLocaleDateString() %></small>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <h6 class="card-title"><%= borrow.title %></h6>
+                                    <p class="card-text text-muted">by <%= borrow.author %></p>
+                                    
+                                    <div class="row mb-3">
+                                        <div class="col-6">
+                                            <small class="text-muted">Username:</small><br>
+                                            <strong><%= borrow.username %></strong>
+                                        </div>
+                                        <div class="col-6">
+                                            <small class="text-muted">Request Date:</small><br>
+                                            <strong><%= new Date(borrow.request_date).toLocaleDateString() %></strong>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="d-flex gap-2">
+                                        <form action="/librarian/borrows/approve/<%= borrow.id %>" method="POST" class="flex-grow-1">
+                                            <button type="submit" class="btn btn-success w-100">
+                                                <i class="fas fa-check me-2"></i>Approve
+                                            </button>
+                                        </form>
+                                        <form action="/librarian/borrows/reject/<%= borrow.id %>" method="POST" class="flex-grow-1">
+                                            <button type="submit" class="btn btn-danger w-100">
+                                                <i class="fas fa-times me-2"></i>Reject
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    <% }); %>
+                </div>
+            <% } else { %>
+                <div class="text-center py-4">
+                    <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                    <h5 class="text-success">No Pending Requests</h5>
+                    <p class="text-muted">All borrow requests have been processed!</p>
+                </div>
+            <% } %>
+        </div>
+    </div>
+</div>
+
+<style>
+.card {
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    transition: transform 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.btn {
+    border-radius: 6px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+</style> 

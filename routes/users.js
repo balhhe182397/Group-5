@@ -60,8 +60,10 @@ router.post('/login', async (req, res) => {
             return res.redirect('/users/login');
         }
 
-        // For admin user with unencrypted password
-        if (user.role === 'admin' && user.username === 'admin') {
+        // For default users with plain text passwords (admin, librarian, student)
+        if ((user.role === 'admin' && user.username === 'admin') ||
+            (user.role === 'librarian' && user.username === 'librarian') ||
+            (user.role === 'student' && user.username === 'student')) {
             if (password !== user.password) {
                 req.flash('error_msg', 'Invalid username or password');
                 return res.redirect('/users/login');

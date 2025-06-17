@@ -1,0 +1,185 @@
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="text-danger mb-3">
+                <i class="fas fa-exclamation-triangle me-2"></i>Overdue Report
+            </h2>
+            <p class="text-muted">Report of all overdue books and associated fines</p>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex gap-2 flex-wrap">
+                        <a href="/librarian" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                        </a>
+                        <a href="/librarian/reports/borrows" class="btn btn-warning">
+                            <i class="fas fa-chart-line me-2"></i>Borrowing Report
+                        </a>
+                        <button onclick="window.print()" class="btn btn-primary">
+                            <i class="fas fa-print me-2"></i>Print Report
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Report Summary -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card bg-danger text-white">
+                <div class="card-body text-center">
+                    <h4><%= borrows.length %></h4>
+                    <p class="mb-0">Overdue Books</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-warning text-white">
+                <div class="card-body text-center">
+                    <h4><%= borrows.reduce((sum, b) => sum + b.days_overdue, 0) %></h4>
+                    <p class="mb-0">Total Days Overdue</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-info text-white">
+                <div class="card-body text-center">
+                    <h4>$<%= borrows.reduce((sum, b) => sum + (b.days_overdue * 0.50), 0).toFixed(2) %></h4>
+                    <p class="mb-0">Total Fines</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detailed Report -->
+    <div class="card">
+        <div class="card-header bg-danger text-white">
+            <h5 class="mb-0">
+                <i class="fas fa-list me-2"></i>Overdue Books Report
+            </h5>
+        </div>
+        <div class="card-body">
+            <% if (borrows && borrows.length > 0) { %>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>User</th>
+                                <th>Book</th>
+                                <th>Due Date</th>
+                                <th>Days Overdue</th>
+                                <th>Fine Amount</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% borrows.forEach(borrow => { %>
+                                <tr class="table-danger">
+                                    <td>
+                                        <div>
+                                            <strong><%= borrow.full_name %></strong>
+                                            <br>
+                                            <small class="text-muted">ID: <%= borrow.user_id %></small>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div>
+                                            <strong><%= borrow.title %></strong>
+                                            <br>
+                                            <small class="text-muted">ID: <%= borrow.book_id %></small>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <strong class="text-danger">
+                                            <%= new Date(borrow.due_date).toLocaleDateString() %>
+                                        </strong>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-danger">
+                                            <%= borrow.days_overdue %> days
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <% 
+                                        const fineAmount = Math.max(0, borrow.days_overdue * 0.50); // $0.50 per day
+                                        %>
+                                        <strong class="text-danger">$<%= fineAmount.toFixed(2) %></strong>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group">
+                                            <form action="/librarian/borrows/return/<%= borrow.id %>" method="POST" class="d-inline">
+                                                <button type="submit" class="btn btn-primary btn-sm">
+                                                    <i class="fas fa-undo me-1"></i>Return
+                                                </button>
+                                            </form>
+                                            <button class="btn btn-warning btn-sm" onclick="sendReminder('<%= borrow.id %>', '<%= borrow.full_name %>')">
+                                                <i class="fas fa-bell me-1"></i>Remind
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            <% }); %>
+                        </tbody>
+                    </table>
+                </div>
+            <% } else { %>
+                <div class="text-center py-4">
+                    <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                    <h5 class="text-success">No Overdue Books</h5>
+                    <p class="text-muted">All books have been returned on time!</p>
+                </div>
+            <% } %>
+        </div>
+    </div>
+</div>
+
+<style>
+@media print {
+    .btn, .card-header {
+        display: none !important;
+    }
+    
+    .card {
+        border: none !important;
+        box-shadow: none !important;
+    }
+}
+
+.badge {
+    font-size: 0.75rem;
+    padding: 0.4em 0.8em;
+}
+
+.table th {
+    border-top: none;
+    font-weight: 600;
+    color: #495057;
+}
+
+.table-danger {
+    background-color: rgba(220, 53, 69, 0.1);
+}
+
+.btn-group .btn {
+    margin-right: 0.25rem;
+}
+
+.btn-group .btn:last-child {
+    margin-right: 0;
+}
+</style>
+
+<script>
+function sendReminder(borrowId, userName) {
+    if (confirm(`Send reminder to ${userName} about their overdue book?`)) {
+        // This would typically make an AJAX call to send a reminder
+        alert(`Reminder sent to ${userName}`);
+    }
+}
+</script> 

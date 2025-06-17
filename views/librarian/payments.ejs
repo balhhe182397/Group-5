@@ -1,0 +1,146 @@
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="text-danger mb-3">
+                <i class="fas fa-money-bill-wave me-2"></i>Payment Management
+            </h2>
+            <p class="text-muted">Manage fine payments and confirmations</p>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex gap-2 flex-wrap">
+                        <a href="/librarian/borrows" class="btn btn-primary">
+                            <i class="fas fa-list me-2"></i>All Borrows
+                        </a>
+                        <a href="/librarian/borrows/overdue" class="btn btn-danger">
+                            <i class="fas fa-exclamation-triangle me-2"></i>Overdue Books
+                        </a>
+                        <a href="/librarian" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payments Table -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">
+                <i class="fas fa-credit-card me-2"></i>Fine Payments
+            </h5>
+        </div>
+        <div class="card-body">
+            <% if (borrows && borrows.length > 0) { %>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>User</th>
+                                <th>Book</th>
+                                <th>Due Date</th>
+                                <th>Return Date</th>
+                                <th>Fine Amount</th>
+                                <th>Payment Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% borrows.forEach(borrow => { %>
+                                <tr>
+                                    <td>
+                                        <div>
+                                            <strong><%= borrow.full_name %></strong>
+                                            <br>
+                                            <small class="text-muted"><%= borrow.username %></small>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div>
+                                            <strong><%= borrow.title %></strong>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <small><%= new Date(borrow.due_date).toLocaleDateString() %></small>
+                                    </td>
+                                    <td>
+                                        <% if (borrow.return_date) { %>
+                                            <small><%= new Date(borrow.return_date).toLocaleDateString() %></small>
+                                        <% } else { %>
+                                            <small class="text-muted">Not returned</small>
+                                        <% } %>
+                                    </td>
+                                    <td>
+                                        <strong class="text-danger">$<%= borrow.fine_amount %></strong>
+                                    </td>
+                                    <td>
+                                        <% if (borrow.payment_status === 'pending') { %>
+                                            <span class="badge bg-warning">Pending</span>
+                                        <% } else if (borrow.payment_status === 'paid') { %>
+                                            <span class="badge bg-success">Paid</span>
+                                        <% } else { %>
+                                            <span class="badge bg-secondary">Cancelled</span>
+                                        <% } %>
+                                    </td>
+                                    <td>
+                                        <% if (borrow.payment_status === 'pending') { %>
+                                            <form action="/librarian/payments/confirm/<%= borrow.id %>" method="POST" class="d-inline">
+                                                <button type="submit" class="btn btn-success btn-sm">
+                                                    <i class="fas fa-check me-1"></i>Confirm Payment
+                                                </button>
+                                            </form>
+                                        <% } else if (borrow.payment_status === 'paid') { %>
+                                            <small class="text-muted">
+                                                Confirmed on <%= borrow.payment_date ? new Date(borrow.payment_date).toLocaleDateString() : 'N/A' %>
+                                            </small>
+                                        <% } %>
+                                    </td>
+                                </tr>
+                            <% }); %>
+                        </tbody>
+                    </table>
+                </div>
+            <% } else { %>
+                <div class="text-center py-4">
+                    <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                    <h5 class="text-success">No Fine Payments</h5>
+                    <p class="text-muted">There are no fine payments to process.</p>
+                </div>
+            <% } %>
+        </div>
+    </div>
+</div>
+
+<style>
+.table th {
+    border-top: none;
+    font-weight: 600;
+    color: #495057;
+}
+
+.table td {
+    vertical-align: middle;
+}
+
+.badge {
+    font-size: 0.75rem;
+    padding: 0.4em 0.8em;
+}
+
+.btn {
+    border-radius: 6px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+</style> 

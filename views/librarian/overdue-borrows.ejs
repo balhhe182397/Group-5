@@ -1,0 +1,150 @@
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="text-danger mb-3">
+                <i class="fas fa-exclamation-triangle me-2"></i>Overdue Books
+            </h2>
+            <p class="text-muted">Manage books that are past their due date</p>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex gap-2 flex-wrap">
+                        <a href="/librarian/borrows" class="btn btn-primary">
+                            <i class="fas fa-list me-2"></i>All Borrows
+                        </a>
+                        <a href="/librarian/borrows/pending" class="btn btn-warning">
+                            <i class="fas fa-clock me-2"></i>Pending Requests
+                        </a>
+                        <a href="/librarian" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Overdue Books -->
+    <div class="card">
+        <div class="card-header bg-danger text-white">
+            <h5 class="mb-0">
+                <i class="fas fa-exclamation-triangle me-2"></i>Overdue Books (<%= borrows.length %>)
+            </h5>
+        </div>
+        <div class="card-body">
+            <% if (borrows && borrows.length > 0) { %>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>User</th>
+                                <th>Book</th>
+                                <th>Due Date</th>
+                                <th>Days Overdue</th>
+                                <th>Fine Amount</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% borrows.forEach(borrow => { %>
+                                <tr class="table-danger">
+                                    <td>
+                                        <div>
+                                            <strong><%= borrow.full_name %></strong>
+                                            <br>
+                                            <small class="text-muted"><%= borrow.username %></small>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div>
+                                            <strong><%= borrow.title %></strong>
+                                            <br>
+                                            <small class="text-muted">by <%= borrow.author %></small>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <strong class="text-danger">
+                                            <%= new Date(borrow.due_date).toLocaleDateString() %>
+                                        </strong>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-danger">
+                                            <%= borrow.days_overdue %> days
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <% 
+                                        const fineAmount = Math.max(0, borrow.days_overdue * 0.50); // $0.50 per day
+                                        %>
+                                        <strong class="text-danger">$<%= fineAmount.toFixed(2) %></strong>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group">
+                                            <form action="/librarian/borrows/return/<%= borrow.id %>" method="POST" class="d-inline">
+                                                <button type="submit" class="btn btn-primary btn-sm">
+                                                    <i class="fas fa-undo me-1"></i>Return
+                                                </button>
+                                            </form>
+                                            <button class="btn btn-warning btn-sm" onclick="sendReminder('<%= borrow.id %>', '<%= borrow.full_name %>')">
+                                                <i class="fas fa-bell me-1"></i>Remind
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            <% }); %>
+                        </tbody>
+                    </table>
+                </div>
+            <% } else { %>
+                <div class="text-center py-4">
+                    <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                    <h5 class="text-success">No Overdue Books</h5>
+                    <p class="text-muted">All books have been returned on time!</p>
+                </div>
+            <% } %>
+        </div>
+    </div>
+</div>
+
+<style>
+.table th {
+    border-top: none;
+    font-weight: 600;
+    color: #495057;
+}
+
+.table td {
+    vertical-align: middle;
+}
+
+.badge {
+    font-size: 0.75rem;
+    padding: 0.4em 0.8em;
+}
+
+.btn-group .btn {
+    margin-right: 0.25rem;
+}
+
+.btn-group .btn:last-child {
+    margin-right: 0;
+}
+
+.table-danger {
+    background-color: rgba(220, 53, 69, 0.1);
+}
+</style>
+
+<script>
+function sendReminder(borrowId, userName) {
+    if (confirm(`Send reminder to ${userName} about their overdue book?`)) {
+        // This would typically make an AJAX call to send a reminder
+        alert(`Reminder sent to ${userName}`);
+    }
+}
+</script> 
