@@ -107,6 +107,9 @@
                                             <%= book.available_quantity > 0 ? 'Available' : 'Not Available' %>
                                         </span>
                                         <div class="btn-group">
+                                            <a href="/books/<%= book.id %>" class="btn btn-info btn-sm">
+                                                <i class="fas fa-info-circle me-1"></i> Details
+                                            </a>
                                             <% if (user && book.available_quantity > 0) { %>
                                                 <a href="/borrows/borrow/<%= book.id %>" class="btn btn-primary btn-sm">
                                                     <i class="fas fa-bookmark me-1"></i> Borrow

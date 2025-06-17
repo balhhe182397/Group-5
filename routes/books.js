@@ -216,4 +216,132 @@ router.get('/search', async (req, res) => {
     }
 });
 
+// Get comments for a book
+router.get('/:id/comments', async (req, res) => {
+    try {
+        const [comments] = await db.execute(`
+            SELECT c.*, u.username, u.full_name 
+            FROM comments c
+            JOIN users u ON c.user_id = u.id
+            WHERE c.book_id = ?
+            ORDER BY c.created_at DESC
+        `, [req.params.id]);
+
+        res.json({ success: true, comments });
+    } catch (error) {
+        console.error('Error fetching comments:', error);
+        res.status(500).json({ success: false, message: 'Error fetching comments' });
+    }
+});
+
+// Add a comment
+router.post('/:id/comments', isAuthenticated, async (req, res) => {
+    try {
+        const { content, rating } = req.body;
+        
+        if (!content || !rating) {
+            return res.status(400).json({
+                success: false,
+                message: 'Content and rating are required'
+            });
+        }
+
+        if (rating < 1 || rating > 5) {
+            return res.status(400).json({
+                success: false,
+                message: 'Rating must be between 1 and 5'
+            });
+        }
+
+        const [result] = await db.execute(`
+            INSERT INTO comments (book_id, user_id, content, rating)
+            VALUES (?, ?, ?, ?)
+        `, [req.params.id, req.session.user.id, content, rating]);
+
+        const [newComment] = await db.execute(`
+            SELECT c.*, u.username, u.full_name 
+            FROM comments c
+            JOIN users u ON c.user_id = u.id
+            WHERE c.id = ?
+        `, [result.insertId]);
+
+        res.json({ success: true, comment: newComment[0] });
+    } catch (error) {
+        console.error('Error adding comment:', error);
+        res.status(500).json({ success: false, message: 'Error adding comment' });
+    }
+});
+
+// Delete a comment
+router.delete('/comments/:id', isAuthenticated, async (req, res) => {
+    try {
+        const [comment] = await db.execute('SELECT * FROM comments WHERE id = ?', [req.params.id]);
+        
+        if (comment.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Comment not found'
+            });
+        }
+
+        // Check if user is the comment owner or an admin/librarian
+        if (comment[0].user_id !== req.session.user.id && 
+            !['admin', 'librarian'].includes(req.session.user.role)) {
+            return res.status(403).json({
+                success: false,
+                message: 'Not authorized to delete this comment'
+            });
+        }
+
+        await db.execute('DELETE FROM comments WHERE id = ?', [req.params.id]);
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error deleting comment:', error);
+        res.status(500).json({ success: false, message: 'Error deleting comment' });
+    }
+});
+
+// Get book details
+router.get('/:id', async (req, res) => {
+    try {
+        const [books] = await db.execute(`
+            SELECT b.*, 
+                   COUNT(DISTINCT br.id) as total_borrows,
+                   COUNT(DISTINCT c.id) as total_comments,
+                   COALESCE(AVG(c.rating), 0) as average_rating
+            FROM books b
+            LEFT JOIN borrows br ON b.id = br.book_id
+            LEFT JOIN comments c ON b.id = c.book_id
+            WHERE b.id = ?
+            GROUP BY b.id
+        `, [req.params.id]);
+
+        if (books.length === 0) {
+            req.flash('error_msg', 'Book not found');
+            return res.redirect('/books');
+        }
+
+        const book = books[0];
+        // Convert average_rating to number
+        book.average_rating = parseFloat(book.average_rating);
+        
+        // Get related books (same category)
+        const [relatedBooks] = await db.execute(`
+            SELECT * FROM books 
+            WHERE category = ? AND id != ? 
+            LIMIT 4
+        `, [book.category, book.id]);
+
+        res.render('books/detail', { 
+            book,
+            relatedBooks,
+            user: req.session.user || null
+        });
+    } catch (err) {
+        console.error(err);
+        req.flash('error_msg', 'An error occurred while fetching book details');
+        res.redirect('/books');
+    }
+});
+
 module.exports = router; 
