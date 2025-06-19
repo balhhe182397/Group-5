@@ -1,5 +1,6 @@
 const isAuthenticated = (req, res, next) => {
     if (req.session.user) {
+        req.user = req.session.user;
         return next();
     }
     req.flash('error_msg', 'Please log in to access this page');
@@ -8,6 +9,7 @@ const isAuthenticated = (req, res, next) => {
 
 const isAdmin = (req, res, next) => {
     if (req.session.user && req.session.user.role === 'admin') {
+        req.user = req.session.user;
         return next();
     }
     req.flash('error_msg', 'Access denied. Admin privileges required.');
@@ -16,6 +18,7 @@ const isAdmin = (req, res, next) => {
 
 const isLibrarian = (req, res, next) => {
     if (req.session.user && (req.session.user.role === 'admin' || req.session.user.role === 'librarian')) {
+        req.user = req.session.user;
         return next();
     }
     req.flash('error_msg', 'Access denied. Librarian privileges required.');

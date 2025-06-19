@@ -99,6 +99,17 @@
                                             <small class="text-muted">
                                                 <i class="fas fa-barcode me-1"></i> <%= book.isbn %><br>
                                                 <i class="fas fa-bookmark me-1"></i> Available: <%= book.available_quantity %>
+                                                <% if (user && (user.role === 'admin' || user.role === 'librarian')) { %>
+                                                    <% if (book.available_quantity <= 0) { %>
+                                                        <span class="ms-2 text-danger" title="Out of Stock">
+                                                            <i class="fas fa-exclamation-circle"></i>
+                                                        </span>
+                                                    <% } else if (book.available_quantity <= Math.ceil(book.quantity * 0.2)) { %>
+                                                        <span class="ms-2 text-warning" title="Low Stock">
+                                                            <i class="fas fa-exclamation-triangle"></i>
+                                                        </span>
+                                                    <% } %>
+                                                <% } %>
                                             </small>
                                         </p>
                                     </div>

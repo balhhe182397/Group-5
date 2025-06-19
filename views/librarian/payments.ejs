@@ -1,3 +1,5 @@
+
+
 <div class="container py-4">
     <div class="row mb-4">
         <div class="col-12">
@@ -7,6 +9,7 @@
             <p class="text-muted">Manage fine payments and confirmations</p>
         </div>
     </div>
+
 
     <!-- Quick Actions -->
     <div class="row mb-4">
@@ -29,6 +32,7 @@
         </div>
     </div>
 
+
     <!-- Payments Table -->
     <div class="card">
         <div class="card-header">
@@ -39,66 +43,85 @@
         <div class="card-body">
             <% if (borrows && borrows.length > 0) { %>
                 <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead class="table-light">
+                    <table id="adminTable" class="table table-striped">
+                        <thead>
                             <tr>
+                                <th>ID</th>
                                 <th>User</th>
                                 <th>Book</th>
                                 <th>Due Date</th>
                                 <th>Return Date</th>
                                 <th>Fine Amount</th>
-                                <th>Payment Status</th>
+                                <th>Status</th>
+                                <th>Payment</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
+                            <% const now = new Date(); %>
                             <% borrows.forEach(borrow => { %>
-                                <tr>
+                                <% const isOverdue = borrow.due_date && new Date(borrow.due_date) < now && (!borrow.return_date); %>
+                                <tr class="<%= isOverdue ? 'table-danger' : '' %>">
+                                    <td><%= borrow.id %></td>
+                                    <td><%= borrow.full_name %></td>
+                                    <td><%= borrow.title %></td>
+                                    <td><%= borrow.due_date ? new Date(borrow.due_date).toLocaleString() : '-' %></td>
+                                    <td><%= borrow.return_date ? new Date(borrow.return_date).toLocaleString() : '-' %></td>
                                     <td>
-                                        <div>
-                                            <strong><%= borrow.full_name %></strong>
-                                            <br>
-                                            <small class="text-muted"><%= borrow.username %></small>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div>
-                                            <strong><%= borrow.title %></strong>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <small><%= new Date(borrow.due_date).toLocaleDateString() %></small>
-                                    </td>
-                                    <td>
-                                        <% if (borrow.return_date) { %>
-                                            <small><%= new Date(borrow.return_date).toLocaleDateString() %></small>
+                                        <% if (borrow.fine_amount > 0) { %>
+                                            <span class="text-danger fw-bold">
+                                                <%= borrow.fine_amount.toLocaleString('vi-VN') %> VND
+                                            </span>
+                                            <% if (isOverdue) { %>
+                                                <span class="badge bg-danger ms-1">Overdue</span>
+                                            <% } %>
                                         <% } else { %>
-                                            <small class="text-muted">Not returned</small>
+                                            -
                                         <% } %>
                                     </td>
                                     <td>
-                                        <strong class="text-danger">$<%= borrow.fine_amount %></strong>
+                                        <span class="badge bg-<%=
+                                            isOverdue ? 'danger' :
+                                            borrow.status === 'requested' ? 'warning' :
+                                            borrow.status === 'borrowed' ? 'primary' :
+                                            borrow.status === 'returned' ? 'success' :
+                                            'secondary'
+                                        %>">
+                                            <%= isOverdue ? 'Overdue' : (borrow.status ? borrow.status.charAt(0).toUpperCase() + borrow.status.slice(1) : '') %>
+                                        </span>
                                     </td>
                                     <td>
-                                        <% if (borrow.payment_status === 'pending') { %>
-                                            <span class="badge bg-warning">Pending</span>
-                                        <% } else if (borrow.payment_status === 'paid') { %>
-                                            <span class="badge bg-success">Paid</span>
-                                        <% } else { %>
-                                            <span class="badge bg-secondary">Cancelled</span>
-                                        <% } %>
-                                    </td>
-                                    <td>
-                                        <% if (borrow.payment_status === 'pending') { %>
+                                        <% if (borrow.payment_status && borrow.payment_status.toLowerCase() === 'pending') { %>
                                             <form action="/librarian/payments/confirm/<%= borrow.id %>" method="POST" class="d-inline">
-                                                <button type="submit" class="btn btn-success btn-sm">
-                                                    <i class="fas fa-check me-1"></i>Confirm Payment
+                                                <button type="submit" class="btn btn-info btn-sm">
+                                                    <i class="fas fa-money-bill-wave me-1"></i> Manage Payment
                                                 </button>
                                             </form>
-                                        <% } else if (borrow.payment_status === 'paid') { %>
-                                            <small class="text-muted">
-                                                Confirmed on <%= borrow.payment_date ? new Date(borrow.payment_date).toLocaleDateString() : 'N/A' %>
-                                            </small>
+                                        <% } %>
+                                        <% if (borrow.payment_status && borrow.payment_status.toLowerCase() === 'paid') { %>
+                                            <span class="badge bg-success">Paid</span>
+                                            <small class="text-muted d-block">Confirmed on <%= borrow.payment_date ? new Date(borrow.payment_date).toLocaleDateString() : 'N/A' %></small>
+                                        <% } %>
+                                        <% if (borrow.payment_status && borrow.payment_status.toLowerCase() === 'cancelled') { %>
+                                            <span class="badge bg-danger">Rejected</span>
+                                        <% } %>
+                                        <% if (borrow.payment_status && !['pending','paid','cancelled'].includes(borrow.payment_status.toLowerCase())) { %>
+                                            <span class="badge bg-secondary"><%= borrow.payment_status %></span>
+                                        <% } %>
+                                        <% if (borrow.payment_confirmed_by) { %>
+                                            <small class="text-muted d-block">By: <%= borrow.payment_confirmed_by %></small>
+                                        <% } %>
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-info btn-sm btn-view-payment" data-id="<%= borrow.id %>">
+                                            <i class="fas fa-eye"></i> View
+                                        </button>
+                                        <% if (!borrow.return_date) { %>
+                                            <form action="/librarian/borrows/return/<%= borrow.id %>" method="POST" class="d-inline">
+                                                <button type="submit" class="btn btn-secondary btn-sm">
+                                                    <i class="fas fa-undo"></i> Return
+                                                </button>
+                                            </form>
                                         <% } %>
                                     </td>
                                 </tr>
@@ -117,6 +140,34 @@
     </div>
 </div>
 
+
+<!-- Modal for Payment Details -->
+<div class="modal fade" id="paymentDetailModal" tabindex="-1" aria-labelledby="paymentDetailModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="paymentDetailModalLabel">Payment Details</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <ul class="list-group">
+          <li class="list-group-item"><strong>User:</strong> <span id="modalUser"></span></li>
+          <li class="list-group-item"><strong>Book:</strong> <span id="modalBook"></span></li>
+          <li class="list-group-item"><strong>Amount:</strong> <span id="modalAmount"></span></li>
+          <li class="list-group-item"><strong>Status:</strong> <span id="modalStatus"></span></li>
+          <li class="list-group-item"><strong>Payment Date:</strong> <span id="modalPaymentDate"></span></li>
+          <li class="list-group-item"><strong>Due Date:</strong> <span id="modalDueDate"></span></li>
+          <li class="list-group-item"><strong>Return Date:</strong> <span id="modalReturnDate"></span></li>
+        </ul>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
 <style>
 .table th {
     border-top: none;
@@ -124,14 +175,17 @@
     color: #495057;
 }
 
+
 .table td {
     vertical-align: middle;
 }
+
 
 .badge {
     font-size: 0.75rem;
     padding: 0.4em 0.8em;
 }
+
 
 .btn {
     border-radius: 6px;
@@ -139,8 +193,46 @@
     transition: all 0.3s ease;
 }
 
+
 .btn:hover {
     transform: translateY(-1px);
     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
 }
-</style> 
+</style>
+
+
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+$(document).ready(function() {
+    $('#adminTable').DataTable();
+});
+
+
+document.querySelectorAll('.btn-view-payment').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const paymentId = this.dataset.id;
+        fetch(`/librarian/payments/${paymentId}`)
+            .then(res => res.json())
+            .then(data => {
+                if (!data.success || !data.data) {
+                    alert(data.message || 'Error loading payment details');
+                    return;
+                }
+                const p = data.data;
+                document.getElementById('modalUser').textContent = p.full_name;
+                document.getElementById('modalBook').textContent = p.title;
+                document.getElementById('modalAmount').textContent = p.fine_amount ? p.fine_amount.toLocaleString('vi-VN') + ' VND' : '-';
+                document.getElementById('modalStatus').textContent = p.payment_status;
+                document.getElementById('modalPaymentDate').textContent = p.payment_date ? new Date(p.payment_date).toLocaleString() : 'N/A';
+                document.getElementById('modalDueDate').textContent = p.due_date ? new Date(p.due_date).toLocaleString() : '-';
+                document.getElementById('modalReturnDate').textContent = p.return_date ? new Date(p.return_date).toLocaleString() : '-';
+                var modal = new bootstrap.Modal(document.getElementById('paymentDetailModal'));
+                modal.show();
+            })
+            .catch(() => alert('Error loading payment details'));
+    });
+});
+</script>
+

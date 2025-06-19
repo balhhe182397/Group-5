@@ -8,4 +8,14 @@ const transporter = nodemailer.createTransport({
     }
 });
 
-module.exports = transporter; 
+async function sendEmail(to, subject, html) {
+    const mailOptions = {
+        from: 'nguyenvanhoitgm@gmail.com',
+        to,
+        subject,
+        html
+    };
+    return transporter.sendMail(mailOptions);
+}
+
+module.exports = { transporter, sendEmail }; 

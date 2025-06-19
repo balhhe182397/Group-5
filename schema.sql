@@ -3,6 +3,13 @@ DROP DATABASE IF EXISTS library_management;
 CREATE DATABASE library_management;
 USE library_management;
 
+-- Drop existing tables if they exist
+DROP TABLE IF EXISTS book_notifications;
+DROP TABLE IF EXISTS comments;
+DROP TABLE IF EXISTS borrows;
+DROP TABLE IF EXISTS books;
+DROP TABLE IF EXISTS users;
+
 -- Users table
 CREATE TABLE users (
     id INT PRIMARY KEY AUTO_INCREMENT,
@@ -32,6 +39,8 @@ CREATE TABLE books (
     available_quantity INT NOT NULL DEFAULT 1,
     description TEXT,
     cover_image VARCHAR(255) NULL,
+    average_rating DECIMAL(3,2) DEFAULT 0.00,
+    total_comments INT DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
@@ -74,6 +83,17 @@ CREATE TABLE comments (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (book_id) REFERENCES books(id) ON DELETE CASCADE,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- Create book_notifications table
+CREATE TABLE book_notifications (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    book_id INT NOT NULL,
+    message TEXT NOT NULL,
+    is_read BOOLEAN DEFAULT FALSE,
+    notification_type ENUM('out_of_stock', 'low_stock', 'other') NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (book_id) REFERENCES books(id)
 );
 
 -- Insert default admin user

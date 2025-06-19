@@ -77,12 +77,26 @@ router.post('/login', async (req, res) => {
             }
         }
 
+        // Store complete user information in session
         req.session.user = {
             id: user.id,
             username: user.username,
-            role: user.role
+            email: user.email,
+            full_name: user.full_name,
+            role: user.role,
+            student_id: user.student_id,
+            lecturer_id: user.lecturer_id,
+            is_verified: user.is_verified
         };
-        res.redirect('/');
+
+        // Redirect based on role
+        if (user.role === 'admin') {
+            res.redirect('/admin');
+        } else if (user.role === 'librarian') {
+            res.redirect('/librarian');
+        } else {
+            res.redirect('/');
+        }
     } catch (error) {
         console.error(error);
         req.flash('error_msg', 'An error occurred');

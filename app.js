@@ -39,14 +39,23 @@ app.use((req, res, next) => {
     next();
 });
 
+// Import routes
+const indexRouter = require('./routes/index');
+const usersRouter = require('./routes/users');
+const booksRouter = require('./routes/books');
+const borrowsRouter = require('./routes/borrows');
+const adminRouter = require('./routes/admin');
+const librarianRouter = require('./routes/librarian');
+const { router: notificationsRouter } = require('./routes/notifications');
+
 // Routes
-app.use('/', require('./routes/index'));
-app.use('/users', require('./routes/users'));
-app.use('/books', require('./routes/books'));
-app.use('/borrows', require('./routes/borrows'));
-app.use('/admin', require('./routes/admin'));
-app.use('/librarian', require('./routes/librarian'));
-app.use('/notifications', require('./routes/notifications'));
+app.use('/', indexRouter);
+app.use('/users', usersRouter);
+app.use('/books', booksRouter);
+app.use('/borrows', borrowsRouter);
+app.use('/admin', adminRouter);
+app.use('/librarian', librarianRouter);
+app.use('/notifications', notificationsRouter);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

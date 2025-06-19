@@ -185,12 +185,23 @@ router.post('/borrows/return/:id', isLibrarian, async (req, res) => {
 router.get('/payments', isLibrarian, async (req, res) => {
     try {
         const [borrows] = await db.query(`
-            SELECT b.*, books.title, users.full_name, users.username
+            SELECT b.*, books.title, users.full_name, users.username,
+                CASE 
+                    WHEN b.payment_status = 'pending' AND b.due_date < NOW() THEN 'overdue'
+                    ELSE b.payment_status
+                END as display_status
             FROM borrows b 
             JOIN books ON b.book_id = books.id 
             JOIN users ON b.user_id = users.id 
             WHERE b.fine_amount > 0
-            ORDER BY b.payment_date DESC, b.due_date DESC
+            ORDER BY 
+                CASE 
+                    WHEN b.payment_status = 'pending' AND b.due_date < NOW() THEN 0
+                    WHEN b.payment_status = 'pending' THEN 1
+                    WHEN b.payment_status = 'paid' THEN 2
+                    ELSE 3
+                END,
+                b.payment_date DESC, b.due_date DESC
         `);
         res.render('librarian/payments', { borrows });
     } catch (err) {
@@ -254,6 +265,27 @@ router.get('/reports/overdue', isLibrarian, async (req, res) => {
         console.error(err);
         req.flash('error_msg', 'An error occurred while loading overdue report');
         res.redirect('/librarian');
+    }
+});
+
+router.get('/payments/:id', isLibrarian, async (req, res) => {
+    try {
+        const [payments] = await db.query(`
+            SELECT b.*, books.title, users.full_name, users.username
+            FROM borrows b
+            JOIN books ON b.book_id = books.id
+            JOIN users ON b.user_id = users.id
+            WHERE b.id = ?
+        `, [req.params.id]);
+
+        if (payments.length === 0) {
+            return res.status(404).json({ success: false, message: 'Payment not found' });
+        }
+
+        res.json({ success: true, data: payments[0] });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, message: 'Error loading payment details' });
     }
 });
 

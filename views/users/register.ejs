@@ -68,12 +68,20 @@
                                 pattern="^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$"
                                 title="Password must be at least 8 characters long and contain at least one letter, one number, and one special character"
                                 required>
+                            <div class="form-check mt-2">
+                                <input class="form-check-input" type="checkbox" id="showPassword" onclick="togglePassword()">
+                                <label class="form-check-label" for="showPassword">Show password</label>
+                            </div>
                             <small class="form-text text-muted">At least 8 characters, including letters, numbers, and special characters.</small>
                             <div class="invalid-feedback">Password must be at least 8 characters, including letters, numbers, and special characters.</div>
                         </div>
                         <div class="mb-3">
                             <label for="confirmPassword" class="form-label">Confirm Password</label>
                             <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" required>
+                            <div class="form-check mt-2">
+                                <input class="form-check-input" type="checkbox" id="showConfirmPassword" onclick="toggleConfirmPassword()">
+                                <label class="form-check-label" for="showConfirmPassword">Show password</label>
+                            </div>
                             <small class="form-text text-muted">Re-enter the same password as above.</small>
                             <div class="invalid-feedback" id="passwordMismatchError">Passwords do not match!</div>
                         </div>
@@ -159,4 +167,13 @@ document.getElementById('registerForm').addEventListener('submit', function(e) {
         document.getElementById('passwordMismatchError').style.display = 'block';
     }
 });
+
+function togglePassword() {
+    var pwd = document.getElementById('password');
+    pwd.type = pwd.type === 'password' ? 'text' : 'password';
+}
+function toggleConfirmPassword() {
+    var pwd = document.getElementById('confirmPassword');
+    pwd.type = pwd.type === 'password' ? 'text' : 'password';
+}
 </script> 

@@ -70,34 +70,36 @@
         <% if (recentBooks && recentBooks.length > 0) { %>
             <% recentBooks.forEach(book => { %>
                 <div class="col-md-3 mb-4">
-                    <div class="card book-card h-100">
-                        <div class="book-cover-container">
-                            <img src="<%= book.cover_image || '/images/default-book-cover.jpg' %>" 
-                                 class="card-img-top book-cover" 
-                                 alt="<%= book.title %> cover">
-                        </div>
-                        <div class="card-body">
-                            <h5 class="card-title"><%= book.title %></h5>
-                            <h6 class="card-subtitle mb-2 text-muted">By <%= book.author %></h6>
-                            <p class="card-text">
-                                <small class="text-muted">
-                                    ISBN: <%= book.isbn %><br>
-                                    Category: <%= book.category %><br>
-                                    Available: <%= book.available_quantity %>
-                                </small>
-                            </p>
-                            <div class="d-flex justify-content-between align-items-center">
-                                <span class="badge <%= book.available_quantity > 0 ? 'bg-success' : 'bg-danger' %>">
-                                    <%= book.available_quantity > 0 ? 'Available' : 'Not Available' %>
-                                </span>
-                                <% if (user && book.available_quantity > 0) { %>
-                                    <a href="/borrows/borrow/<%= book.id %>" class="btn btn-primary btn-sm">
-                                        <i class="fas fa-bookmark me-1"></i> Borrow
-                                    </a>
-                                <% } %>
+                    <a href="/books/<%= book.id %>" style="text-decoration: none; color: inherit;">
+                        <div class="card book-card h-100">
+                            <div class="book-cover-container">
+                                <img src="<%= book.cover_image || '/images/default-book-cover.jpg' %>" 
+                                     class="card-img-top book-cover" 
+                                     alt="<%= book.title %> cover">
+                            </div>
+                            <div class="card-body">
+                                <h5 class="card-title"><%= book.title %></h5>
+                                <h6 class="card-subtitle mb-2 text-muted">By <%= book.author %></h6>
+                                <p class="card-text">
+                                    <small class="text-muted">
+                                        ISBN: <%= book.isbn %><br>
+                                        Category: <%= book.category %><br>
+                                        Available: <%= book.available_quantity %>
+                                    </small>
+                                </p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="badge <%= book.available_quantity > 0 ? 'bg-success' : 'bg-danger' %>">
+                                        <%= book.available_quantity > 0 ? 'Available' : 'Not Available' %>
+                                    </span>
+                                    <% if (user && book.available_quantity > 0) { %>
+                                        <a href="/borrows/borrow/<%= book.id %>" class="btn btn-primary btn-sm" onclick="event.stopPropagation();">
+                                            <i class="fas fa-bookmark me-1"></i> Borrow
+                                        </a>
+                                    <% } %>
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    </a>
                 </div>
             <% }); %>
         <% } else { %>
@@ -117,34 +119,36 @@
         <% if (popularBooks && popularBooks.length > 0) { %>
             <% popularBooks.forEach(book => { %>
                 <div class="col-md-3 mb-4">
-                    <div class="card book-card h-100">
-                        <div class="book-cover-container">
-                            <img src="<%= book.cover_image || '/images/default-book-cover.jpg' %>" 
-                                 class="card-img-top book-cover" 
-                                 alt="<%= book.title %> cover">
-                        </div>
-                        <div class="card-body">
-                            <h5 class="card-title"><%= book.title %></h5>
-                            <h6 class="card-subtitle mb-2 text-muted">By <%= book.author %></h6>
-                            <p class="card-text">
-                                <small class="text-muted">
-                                    ISBN: <%= book.isbn %><br>
-                                    Category: <%= book.category %><br>
-                                    Available: <%= book.available_quantity %>
-                                </small>
-                            </p>
-                            <div class="d-flex justify-content-between align-items-center">
-                                <span class="badge <%= book.available_quantity > 0 ? 'bg-success' : 'bg-danger' %>">
-                                    <%= book.available_quantity > 0 ? 'Available' : 'Not Available' %>
-                                </span>
-                                <% if (user && book.available_quantity > 0) { %>
-                                    <a href="/borrows/borrow/<%= book.id %>" class="btn btn-primary btn-sm">
-                                        <i class="fas fa-bookmark me-1"></i> Borrow
-                                    </a>
-                                <% } %>
+                    <a href="/books/<%= book.id %>" style="text-decoration: none; color: inherit;">
+                        <div class="card book-card h-100">
+                            <div class="book-cover-container">
+                                <img src="<%= book.cover_image || '/images/default-book-cover.jpg' %>" 
+                                     class="card-img-top book-cover" 
+                                     alt="<%= book.title %> cover">
+                            </div>
+                            <div class="card-body">
+                                <h5 class="card-title"><%= book.title %></h5>
+                                <h6 class="card-subtitle mb-2 text-muted">By <%= book.author %></h6>
+                                <p class="card-text">
+                                    <small class="text-muted">
+                                        ISBN: <%= book.isbn %><br>
+                                        Category: <%= book.category %><br>
+                                        Available: <%= book.available_quantity %>
+                                    </small>
+                                </p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="badge <%= book.available_quantity > 0 ? 'bg-success' : 'bg-danger' %>">
+                                        <%= book.available_quantity > 0 ? 'Available' : 'Not Available' %>
+                                    </span>
+                                    <% if (user && book.available_quantity > 0) { %>
+                                        <a href="/borrows/borrow/<%= book.id %>" class="btn btn-primary btn-sm" onclick="event.stopPropagation();">
+                                            <i class="fas fa-bookmark me-1"></i> Borrow
+                                        </a>
+                                    <% } %>
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    </a>
                 </div>
             <% }); %>
         <% } else { %>

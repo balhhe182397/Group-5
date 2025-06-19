@@ -2,22 +2,72 @@ const express = require('express');
 const router = express.Router();
 const db = require('../config/database');
 const { isAuthenticated, isLibrarian } = require('../middleware/auth');
-const transporter = require('../config/email');
+const { sendEmail } = require('../config/email');
+const { sendOutOfStockNotification } = require('./notifications');
 
-// Helper function to send email
-async function sendEmail(to, subject, html) {
+// Add these helper functions at the top of the file after the imports
+const MAX_RETRIES = 3;
+const RETRY_DELAY = 1000; // 1 second
+
+async function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function retryTransaction(operation, retries = MAX_RETRIES) {
+    for (let i = 0; i < retries; i++) {
+        try {
+            const connection = await db.getConnection();
+            try {
+                await connection.beginTransaction();
+                const result = await operation(connection);
+                await connection.commit();
+                return result;
+            } catch (error) {
+                await connection.rollback();
+                if (error.code === 'ER_LOCK_WAIT_TIMEOUT' && i < retries - 1) {
+                    await sleep(RETRY_DELAY * (i + 1)); // Exponential backoff
+                    continue;
+                }
+                throw error;
+            } finally {
+                connection.release();
+            }
+        } catch (error) {
+            if (error.code === 'ER_LOCK_WAIT_TIMEOUT' && i < retries - 1) {
+                await sleep(RETRY_DELAY * (i + 1));
+                continue;
+            }
+            throw error;
+        }
+    }
+}
+
+// Add this function after the sendEmail helper function
+async function checkBookStockAndNotify(bookId, connection) {
     try {
-        const info = await transporter.sendMail({
-            from: 'nguyenvanhoitgm@gmail.com',
-            to: to,
-            subject: subject,
-            html: html
-        });
-        console.log('Email sent:', info.messageId);
-        return true;
+        const [books] = await connection.execute(
+            'SELECT id, title, author, isbn, quantity, available_quantity FROM books WHERE id = ?',
+            [bookId]
+        );
+
+        if (books.length === 0) return;
+
+        const book = books[0];
+        
+        // If book is out of stock
+        if (book.available_quantity <= 0) {
+            await sendOutOfStockNotification(book);
+        }
+        // If book is running low (less than 20% of total quantity available)
+        else if (book.available_quantity <= Math.ceil(book.quantity * 0.2)) {
+            const message = `Book "${book.title}" is running low (${book.available_quantity} copies left).`;
+            await connection.execute(
+                'INSERT INTO book_notifications (book_id, message, notification_type) VALUES (?, ?, ?)',
+                [book.id, message, 'low_stock']
+            );
+        }
     } catch (error) {
-        console.error('Error sending email:', error);
-        return false;
+        console.error('Error checking book stock and sending notification:', error);
     }
 }
 
@@ -171,48 +221,70 @@ router.post('/borrow/:bookId', isAuthenticated, async (req, res) => {
 });
 
 // Approve borrow request
-router.post('/approve/:borrowId', isLibrarian, async (req, res) => {
+router.post('/approve/:id', isLibrarian, async (req, res) => {
+    if (!req.user) {
+        req.flash('error', 'Bạn cần đăng nhập lại.');
+        return res.redirect('/users/login');
+    }
     try {
-        const [borrows] = await db.execute('SELECT * FROM borrows WHERE id = ?', [req.params.borrowId]);
-        if (borrows.length === 0) {
-            req.flash('error_msg', 'Borrow request not found');
-            return res.redirect('/borrows');
+        const borrowId = req.params.id;
+        const userId = req.user.id;
+
+        const result = await retryTransaction(async (connection) => {
+            // Get borrow request details
+            const [borrowRequests] = await connection.execute(
+                'SELECT * FROM borrows WHERE id = ?',
+                [borrowId]
+            );
+
+            if (borrowRequests.length === 0) {
+                throw new Error('Borrow request not found');
+            }
+
+            const borrowRequest = borrowRequests[0];
+
+            // Calculate due date (14 days from approval)
+            const dueDate = new Date();
+            dueDate.setDate(dueDate.getDate() + 14);
+
+            // Update borrow status
+            await connection.execute(
+                `UPDATE borrows 
+                 SET status = 'borrowed',
+                     approval_status = 'approved', 
+                     approved_by = ?, 
+                     approval_date = CURRENT_TIMESTAMP,
+                     due_date = ?
+                 WHERE id = ?`,
+                [userId, dueDate, borrowId]
+            );
+
+            // Update book available quantity
+            await connection.execute(
+                'UPDATE books SET available_quantity = available_quantity - 1 WHERE id = ?',
+                [borrowRequest.book_id]
+            );
+
+            // Get updated book info
+            const [books] = await connection.execute(
+                'SELECT * FROM books WHERE id = ?',
+                [borrowRequest.book_id]
+            );
+
+            return { borrowRequest, book: books[0] };
+        });
+
+        // Send notifications outside the transaction
+        if (result.book.available_quantity <= 0) {
+            await checkBookStockAndNotify(result.book.id, db);
         }
 
-        const borrow = borrows[0];
-        if (borrow.status !== 'requested') {
-            req.flash('error_msg', 'Invalid borrow request status');
-            return res.redirect('/borrows');
-        }
-
-        // Calculate due date (14 days from pickup date)
-        const dueDate = new Date(borrow.pickup_date);
-        dueDate.setDate(dueDate.getDate() + 14);
-
-        // Update borrow record
-        await db.execute(
-            `UPDATE borrows 
-             SET approval_status = 'approved', 
-                 approved_by = ?, 
-                 approval_date = CURRENT_TIMESTAMP,
-                 due_date = ?,
-                 status = 'borrowed'
-             WHERE id = ?`,
-            [req.session.user.id, dueDate, req.params.borrowId]
-        );
-
-        // Update book available quantity
-        await db.execute(
-            'UPDATE books SET available_quantity = available_quantity - 1 WHERE id = ?',
-            [borrow.book_id]
-        );
-
-        req.flash('success_msg', 'Borrow request approved successfully');
-        res.redirect('/borrows');
+        req.flash('success', 'Borrow request approved successfully');
+        res.redirect('/borrows/pending');
     } catch (error) {
-        console.error(error);
-        req.flash('error_msg', 'Error approving borrow request');
-        res.redirect('/borrows');
+        console.error('Error in approve borrow request:', error);
+        req.flash('error', 'Failed to approve borrow request. Please try again.');
+        res.redirect('/borrows/pending');
     }
 });
 
