@@ -440,4 +440,31 @@ router.get('/profile/:id', isAdmin, async (req, res) => {
     }
 });
 
+// User dashboard
+router.get('/dashboard', isAuthenticated, async (req, res) => {
+    try {
+        const userId = req.session.user.id;
+        // Tổng số sách đã mượn
+        const [totalBorrows] = await db.execute('SELECT COUNT(*) as count FROM borrows WHERE user_id = ?', [userId]);
+        // Số sách đang mượn (chưa trả)
+        const [activeBorrows] = await db.execute('SELECT COUNT(*) as count FROM borrows WHERE user_id = ? AND return_date IS NULL', [userId]);
+        // Tổng tiền phạt
+        const [totalFines] = await db.execute('SELECT COALESCE(SUM(fine_amount),0) as total FROM borrows WHERE user_id = ?', [userId]);
+        // Số bình luận đã viết
+        const [totalComments] = await db.execute('SELECT COUNT(*) as count FROM comments WHERE user_id = ?', [userId]);
+
+        const stats = {
+            totalBorrows: totalBorrows[0].count,
+            activeBorrows: activeBorrows[0].count,
+            totalFines: totalFines[0].total,
+            totalComments: totalComments[0].count
+        };
+        res.render('users/dashboard', { stats });
+    } catch (error) {
+        console.error(error);
+        req.flash('error_msg', 'Error loading dashboard');
+        res.redirect('/');
+    }
+});
+
 module.exports = router; 
