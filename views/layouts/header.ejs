@@ -32,7 +32,7 @@
                     </li>
                     <% if (typeof user !== 'undefined') { %>
                         <li class="nav-item">
-                            <a class="nav-link" href="/borrows/my-borrows">My Borrows</a>
+                            <a class="nav-link" href="/dashboard"><i class="fas fa-tachometer-alt me-1"></i>Dashboard</a>
                         </li>
                         <% if (user.role === 'admin' || user.role === 'librarian') { %>
                             <li class="nav-item">

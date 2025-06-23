@@ -1,0 +1,161 @@
+<% if (stats) { %>
+<!-- DASHBOARD ADMIN -->
+<div class="container py-4">
+    <h2 class="mb-4"><i class="fas fa-tachometer-alt me-2"></i>Admin Dashboard</h2>
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Total Books</h5>
+                    <p class="display-6"><i class="fas fa-book"></i> <%= stats.totalBooks %></p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Active Borrows</h5>
+                    <p class="display-6"><i class="fas fa-bookmark"></i> <%= stats.activeBorrows %></p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Pending Verifications</h5>
+                    <p class="display-6"><i class="fas fa-user-check"></i> <%= stats.pendingVerifications %></p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Total Users</h5>
+                    <p class="display-6"><i class="fas fa-users"></i> <%= stats.totalUsers %></p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <a href="/admin" class="btn btn-primary"><i class="fas fa-cogs me-2"></i>Go to Admin Panel</a>
+</div>
+<% } else { %>
+<!-- DASHBOARD USER -->
+<div class="container py-4">
+    <h2 class="mb-4"><i class="fas fa-user me-2"></i>User Dashboard</h2>
+    <div class="row mb-4">
+        <div class="col-md-2">
+            <div class="card text-center border-primary">
+                <div class="card-body">
+                    <h6 class="card-title text-muted">Đã mượn</h6>
+                    <p class="display-6 text-primary"><i class="fas fa-book"></i><br><%= userStats.totalBorrows %></p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card text-center border-success">
+                <div class="card-body">
+                    <h6 class="card-title text-muted">Đã trả</h6>
+                    <p class="display-6 text-success"><i class="fas fa-check-circle"></i><br><%= userStats.returned %></p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card text-center border-warning">
+                <div class="card-body">
+                    <h6 class="card-title text-muted">Đang mượn</h6>
+                    <p class="display-6 text-warning"><i class="fas fa-book-reader"></i><br><%= userStats.borrowing %></p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card text-center border-danger">
+                <div class="card-body">
+                    <h6 class="card-title text-muted">Tổng phạt</h6>
+                    <p class="display-6 text-danger"><i class="fas fa-coins"></i><br><%= userStats.totalFine %> đ</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card text-center border-info">
+                <div class="card-body">
+                    <h6 class="card-title text-muted">Đã thanh toán</h6>
+                    <p class="display-6 text-info"><i class="fas fa-money-bill-wave"></i><br><%= userStats.paidFine %> đ</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card text-center border-secondary">
+                <div class="card-body">
+                    <h6 class="card-title text-muted">Đang nợ</h6>
+                    <p class="display-6 text-secondary"><i class="fas fa-exclamation-circle"></i><br><%= userStats.unpaidFine %> đ</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="card mb-4">
+        <div class="card-body d-flex align-items-center">
+            <div class="me-4">
+                <i class="fas fa-user-circle fa-4x text-primary"></i>
+            </div>
+            <div>
+                <h4><%= user.full_name %></h4>
+                <span class="badge <%= user.role === 'student' ? 'bg-primary' : user.role === 'lecturer' ? 'bg-info' : 'bg-secondary' %>">
+                    <%= user.role.charAt(0).toUpperCase() + user.role.slice(1) %>
+                </span>
+                <p class="mb-1"><strong>Email:</strong> <%= user.email %></p>
+                <% if (user.role === 'student') { %>
+                    <p class="mb-1"><strong>Student ID:</strong> <%= user.student_id %></p>
+                <% } else if (user.role === 'lecturer') { %>
+                    <p class="mb-1"><strong>Lecturer ID:</strong> <%= user.lecturer_id %></p>
+                <% } %>
+                <p class="mb-1"><strong>Member Since:</strong> <%= new Date(user.created_at).toLocaleDateString() %></p>
+                <a href="/users/profile" class="btn btn-outline-primary btn-sm mt-2"><i class="fas fa-user-edit me-1"></i>View Profile</a>
+            </div>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="fas fa-book me-2"></i>Lịch sử mượn gần đây</h5>
+        </div>
+        <div class="card-body">
+            <% if (borrows && borrows.length > 0) { %>
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Book</th>
+                                <th>Author</th>
+                                <th>Borrow Date</th>
+                                <th>Due Date</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% borrows.forEach(borrow => { %>
+                                <tr>
+                                    <td>
+                                        <img src="<%= borrow.cover_image ? '/uploads/books/' + borrow.cover_image : '/images/default-book-cover.jpg' %>" alt="cover" width="40" class="me-2 rounded">
+                                        <%= borrow.title %>
+                                    </td>
+                                    <td><%= borrow.author %></td>
+                                    <td><%= borrow.borrow_date ? new Date(borrow.borrow_date).toLocaleDateString() : '-' %></td>
+                                    <td><%= borrow.due_date ? new Date(borrow.due_date).toLocaleDateString() : '-' %></td>
+                                    <td>
+                                        <span class="badge <%= borrow.status === 'returned' ? 'bg-success' : borrow.status === 'overdue' ? 'bg-danger' : 'bg-warning' %>">
+                                            <%= borrow.status.charAt(0).toUpperCase() + borrow.status.slice(1) %>
+                                        </span>
+                                    </td>
+                                </tr>
+                            <% }) %>
+                        </tbody>
+                    </table>
+                </div>
+            <% } else { %>
+                <div class="alert alert-info mb-0">
+                    <i class="fas fa-info-circle me-2"></i>No borrow history found.
+                </div>
+            <% } %>
+        </div>
+    </div>
+</div>
+<% } %> 
