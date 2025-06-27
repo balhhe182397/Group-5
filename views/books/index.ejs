@@ -112,6 +112,9 @@
                                                     <i class="fas fa-bookmark me-1"></i> Borrow
                                                 </a>
                                             <% } %>
+                                            <a href="/books/detail/<%= book.id %>" class="btn btn-info btn-sm">
+                                                <i class="fas fa-info-circle me-1"></i> Chi tiết
+                                            </a>
                                             <% if (user && (user.role === 'admin' || user.role === 'librarian')) { %>
                                                 <a href="/books/edit/<%= book.id %>" class="btn btn-warning btn-sm">
                                                     <i class="fas fa-edit me-1"></i> Edit
@@ -287,6 +290,28 @@
 
 .btn-group .btn {
     border-radius: 6px !important;
+}
+
+/* Custom: Make action buttons smaller and fit card */
+.book-card .btn-group .btn {
+    font-size: 0.75rem;
+    padding: 0.1rem 0.3rem;
+    min-width: 40px;
+    min-height: 22px;
+    line-height: 1;
+}
+
+.book-card .btn-group {
+    gap: 0.15rem;
+}
+
+@media (max-width: 768px) {
+    .book-card .btn-group .btn {
+        font-size: 0.7rem;
+        min-width: 32px;
+        min-height: 18px;
+        padding: 0.08rem 0.18rem;
+    }
 }
 </style>
 

@@ -46,6 +46,7 @@ app.use('/books', require('./routes/books'));
 app.use('/borrows', require('./routes/borrows'));
 app.use('/admin', require('./routes/admin'));
 app.use('/notifications', require('./routes/notifications'));
+app.use('/comments', require('./routes/comments'));
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

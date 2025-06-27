@@ -1,0 +1,390 @@
+<!-- Comments Section -->
+<div class="comments-section mt-4">
+    <h4 class="mb-3">
+        <i class="fas fa-comments me-2"></i>Bình luận (<span id="comment-count">0</span>)
+    </h4>
+    
+    <!-- Add Comment Form -->
+    <% if (user) { %>
+        <div class="card mb-4">
+            <div class="card-body">
+                <h6 class="card-title">Thêm bình luận</h6>
+                <form id="comment-form">
+                    <div class="mb-3">
+                        <label for="rating" class="form-label">Đánh giá:</label>
+                        <div class="rating-stars">
+                            <i class="fas fa-star star" data-rating="1"></i>
+                            <i class="fas fa-star star" data-rating="2"></i>
+                            <i class="fas fa-star star" data-rating="3"></i>
+                            <i class="fas fa-star star" data-rating="4"></i>
+                            <i class="fas fa-star star" data-rating="5"></i>
+                        </div>
+                        <input type="hidden" id="rating-value" name="rating">
+                    </div>
+                    <div class="mb-3">
+                        <label for="comment-content" class="form-label">Nội dung:</label>
+                        <textarea class="form-control" id="comment-content" name="content" rows="3" 
+                                  placeholder="Chia sẻ suy nghĩ của bạn về cuốn sách này..." required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-paper-plane me-2"></i>Gửi bình luận
+                    </button>
+                </form>
+            </div>
+        </div>
+    <% } else { %>
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle me-2"></i>
+            Vui lòng <a href="/users/login">đăng nhập</a> để thêm bình luận.
+        </div>
+    <% } %>
+
+    <!-- Comments List -->
+    <div id="comments-list">
+        <!-- Comments will be loaded here -->
+    </div>
+</div>
+
+<style>
+.rating-stars {
+    font-size: 1.5rem;
+    color: #ddd;
+    cursor: pointer;
+}
+
+.rating-stars .star {
+    transition: color 0.2s;
+}
+
+.rating-stars .star:hover,
+.rating-stars .star.active {
+    color: #ffc107;
+}
+
+.comment-item {
+    border-left: 3px solid #3498db;
+    padding-left: 15px;
+    margin-bottom: 20px;
+}
+
+.comment-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.comment-author {
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+.comment-date {
+    font-size: 0.9rem;
+    color: #7f8c8d;
+}
+
+.comment-rating {
+    color: #f39c12;
+    margin-bottom: 5px;
+}
+
+.comment-content {
+    background-color: #f8f9fa;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 10px;
+}
+
+.comment-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.comment-actions button {
+    font-size: 0.8rem;
+    padding: 2px 8px;
+}
+
+.loading {
+    text-align: center;
+    padding: 20px;
+    color: #7f8c8d;
+}
+
+.no-comments {
+    text-align: center;
+    padding: 20px;
+    color: #7f8c8d;
+    font-style: italic;
+}
+</style>
+
+<script>
+let currentRating = 0;
+const bookId = '<%= book.id %>';
+
+// Initialize rating stars
+document.addEventListener('DOMContentLoaded', function() {
+    const stars = document.querySelectorAll('.star');
+    const ratingInput = document.getElementById('rating-value');
+
+    stars.forEach(star => {
+        star.addEventListener('click', function() {
+            const rating = parseInt(this.dataset.rating);
+            currentRating = rating;
+            ratingInput.value = rating;
+            
+            // Update star display
+            stars.forEach((s, index) => {
+                if (index < rating) {
+                    s.classList.add('active');
+                } else {
+                    s.classList.remove('active');
+                }
+            });
+        });
+
+        star.addEventListener('mouseenter', function() {
+            const rating = parseInt(this.dataset.rating);
+            stars.forEach((s, index) => {
+                if (index < rating) {
+                    s.style.color = '#ffc107';
+                }
+            });
+        });
+
+        star.addEventListener('mouseleave', function() {
+            stars.forEach((s, index) => {
+                if (index < currentRating) {
+                    s.style.color = '#ffc107';
+                } else {
+                    s.style.color = '#ddd';
+                }
+            });
+        });
+    });
+
+    // Load comments
+    loadComments();
+
+    // Handle comment form submission
+    const commentForm = document.getElementById('comment-form');
+    if (commentForm) {
+        commentForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            addComment();
+        });
+    }
+});
+
+// Load comments for the book
+async function loadComments() {
+    try {
+        const response = await fetch(`/comments/book/${bookId}`);
+        const comments = await response.json();
+        displayComments(comments);
+    } catch (error) {
+        console.error('Error loading comments:', error);
+        document.getElementById('comments-list').innerHTML = 
+            '<div class="alert alert-danger">Lỗi khi tải bình luận</div>';
+    }
+}
+
+// Display comments
+function displayComments(comments) {
+    const commentsList = document.getElementById('comments-list');
+    const commentCount = document.getElementById('comment-count');
+    
+    commentCount.textContent = comments.length;
+    
+    if (comments.length === 0) {
+        commentsList.innerHTML = '<div class="no-comments">Chưa có bình luận nào cho cuốn sách này.</div>';
+        return;
+    }
+
+    commentsList.innerHTML = comments.map(comment => `
+        <div class="comment-item" data-comment-id="${comment.id}">
+            <div class="comment-header">
+                <div>
+                    <span class="comment-author">${comment.full_name}</span>
+                    <span class="badge bg-secondary ms-2">${comment.role}</span>
+                </div>
+                <span class="comment-date">${formatDate(comment.created_at)}</span>
+            </div>
+            ${comment.rating ? `
+                <div class="comment-rating">
+                    ${generateStars(comment.rating)}
+                </div>
+            ` : ''}
+            <div class="comment-content">${comment.content}</div>
+            ${canEditComment(comment) ? `
+                <div class="comment-actions">
+                    <button class="btn btn-sm btn-outline-primary" onclick="editComment(${comment.id})">
+                        <i class="fas fa-edit"></i> Sửa
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger" onclick="deleteComment(${comment.id})">
+                        <i class="fas fa-trash"></i> Xóa
+                    </button>
+                </div>
+            ` : ''}
+        </div>
+    `).join('');
+}
+
+// Add new comment
+async function addComment() {
+    const content = document.getElementById('comment-content').value.trim();
+    const rating = document.getElementById('rating-value').value;
+
+    if (!content) {
+        alert('Vui lòng nhập nội dung bình luận');
+        return;
+    }
+
+    try {
+        const response = await fetch('/comments/add', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                book_id: bookId,
+                content: content,
+                rating: rating || null
+            })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            // Reset form
+            document.getElementById('comment-content').value = '';
+            document.getElementById('rating-value').value = '';
+            currentRating = 0;
+            document.querySelectorAll('.star').forEach(star => {
+                star.classList.remove('active');
+                star.style.color = '#ddd';
+            });
+
+            // Reload comments
+            loadComments();
+            
+            // Show success message
+            showAlert('Bình luận đã được gửi thành công!', 'success');
+        } else {
+            showAlert(result.error || 'Có lỗi xảy ra', 'danger');
+        }
+    } catch (error) {
+        console.error('Error adding comment:', error);
+        showAlert('Có lỗi xảy ra khi gửi bình luận', 'danger');
+    }
+}
+
+// Edit comment
+async function editComment(commentId) {
+    const commentItem = document.querySelector(`[data-comment-id="${commentId}"]`);
+    const contentDiv = commentItem.querySelector('.comment-content');
+    const currentContent = contentDiv.textContent;
+    
+    const newContent = prompt('Sửa bình luận:', currentContent);
+    if (newContent === null || newContent.trim() === '') return;
+
+    try {
+        const response = await fetch(`/comments/update/${commentId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                content: newContent.trim()
+            })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            contentDiv.textContent = newContent.trim();
+            showAlert('Bình luận đã được cập nhật!', 'success');
+        } else {
+            showAlert(result.error || 'Có lỗi xảy ra', 'danger');
+        }
+    } catch (error) {
+        console.error('Error updating comment:', error);
+        showAlert('Có lỗi xảy ra khi cập nhật bình luận', 'danger');
+    }
+}
+
+// Delete comment
+async function deleteComment(commentId) {
+    if (!confirm('Bạn có chắc chắn muốn xóa bình luận này?')) return;
+
+    try {
+        const response = await fetch(`/comments/delete/${commentId}`, {
+            method: 'DELETE'
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            document.querySelector(`[data-comment-id="${commentId}"]`).remove();
+            loadComments(); // Reload to update count
+            showAlert('Bình luận đã được xóa!', 'success');
+        } else {
+            showAlert(result.error || 'Có lỗi xảy ra', 'danger');
+        }
+    } catch (error) {
+        console.error('Error deleting comment:', error);
+        showAlert('Có lỗi xảy ra khi xóa bình luận', 'danger');
+    }
+}
+
+// Helper functions
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('vi-VN', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+}
+
+function generateStars(rating) {
+    let stars = '';
+    for (let i = 1; i <= 5; i++) {
+        if (i <= rating) {
+            stars += '<i class="fas fa-star" style="color: #ffc107;"></i>';
+        } else {
+            stars += '<i class="far fa-star" style="color: #ddd;"></i>';
+        }
+    }
+    return stars;
+}
+
+function canEditComment(comment) {
+    const currentUserId = '<%= user ? user.id : "null" %>';
+    const currentUserRole = '<%= user ? user.role : "" %>';
+    return comment.user_id == currentUserId || currentUserRole === 'admin';
+}
+
+function showAlert(message, type) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    const commentsSection = document.querySelector('.comments-section');
+    commentsSection.insertBefore(alertDiv, commentsSection.firstChild);
+    
+    // Auto remove after 5 seconds
+    setTimeout(() => {
+        if (alertDiv.parentNode) {
+            alertDiv.remove();
+        }
+    }, 5000);
+}
+</script> 

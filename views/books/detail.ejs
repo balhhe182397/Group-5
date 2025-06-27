@@ -1,0 +1,133 @@
+<div class="container mt-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/">Trang chủ</a></li>
+            <li class="breadcrumb-item"><a href="/books">Sách</a></li>
+            <li class="breadcrumb-item active" aria-current="page"><%= book.title %></li>
+        </ol>
+    </nav>
+
+    <!-- Book Details -->
+    <div class="row">
+        <!-- Book Cover -->
+        <div class="col-md-4">
+            <div class="card">
+                <img src="<%= book.cover_image || '/images/default-book-cover.jpg' %>" 
+                     class="card-img-top" alt="<%= book.title %> cover"
+                     style="height: 400px; object-fit: cover;">
+            </div>
+        </div>
+
+        <!-- Book Information -->
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body">
+                    <h2 class="card-title"><%= book.title %></h2>
+                    <h6 class="card-subtitle mb-3 text-muted">Tác giả: <%= book.author %></h6>
+                    
+                    <!-- Rating Display -->
+                    <div class="mb-3">
+                        <div class="d-flex align-items-center">
+                            <div class="me-3">
+                                <% for(let i = 1; i <= 5; i++) { %>
+                                    <% if(i <= Math.round(book.avgRating)) { %>
+                                        <i class="fas fa-star text-warning"></i>
+                                    <% } else { %>
+                                        <i class="far fa-star text-muted"></i>
+                                    <% } %>
+                                <% } %>
+                            </div>
+                            <span class="fw-bold"><%= book.avgRating %></span>
+                            <span class="text-muted ms-2">(<%= book.totalRatings %> đánh giá)</span>
+                        </div>
+                    </div>
+
+                    <!-- Book Details Table -->
+                    <div class="table-responsive">
+                        <table class="table table-borderless">
+                            <tr>
+                                <td class="fw-bold" style="width: 150px;">ISBN:</td>
+                                <td><%= book.isbn %></td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">Thể loại:</td>
+                                <td><span class="badge bg-primary"><%= book.category %></span></td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">Số lượng:</td>
+                                <td><%= book.quantity %> cuốn</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">Có sẵn:</td>
+                                <td>
+                                    <span class="badge <%= book.available_quantity > 0 ? 'bg-success' : 'bg-danger' %>">
+                                        <%= book.available_quantity %> cuốn
+                                    </span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">Ngày thêm:</td>
+                                <td><%= new Date(book.created_at).toLocaleDateString('vi-VN') %></td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <!-- Description -->
+                    <% if(book.description) { %>
+                        <div class="mb-3">
+                            <h6 class="fw-bold">Mô tả:</h6>
+                            <p class="text-muted"><%= book.description %></p>
+                        </div>
+                    <% } %>
+
+                    <!-- Action Buttons -->
+                    <div class="d-flex gap-2">
+                        <% if(user && book.available_quantity > 0) { %>
+                            <a href="/borrows/borrow/<%= book.id %>" class="btn btn-primary">
+                                <i class="fas fa-bookmark me-2"></i>Mượn sách
+                            </a>
+                        <% } %>
+                        
+                        <% if(user && user.role === 'admin') { %>
+                            <a href="/books/edit/<%= book.id %>" class="btn btn-outline-secondary">
+                                <i class="fas fa-edit me-2"></i>Sửa sách
+                            </a>
+                            <button class="btn btn-outline-danger" onclick="deleteBook(<%= book.id %>)">
+                                <i class="fas fa-trash me-2"></i>Xóa sách
+                            </button>
+                        <% } %>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Comments Section -->
+    <%- include('../books/comments') %>
+</div>
+
+<script>
+function deleteBook(bookId) {
+    if(confirm('Bạn có chắc chắn muốn xóa cuốn sách này?')) {
+        const formData = new FormData();
+        formData.append('_method', 'DELETE');
+        
+        fetch(`/books/delete/${bookId}`, {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => {
+            if(response.ok) {
+                window.location.href = '/books';
+            } else {
+                alert('Có lỗi xảy ra khi xóa sách');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Có lỗi xảy ra khi xóa sách');
+        });
+    }
+}
+</script> 

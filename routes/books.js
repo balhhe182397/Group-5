@@ -216,4 +216,40 @@ router.get('/search', async (req, res) => {
     }
 });
 
+// Book detail page
+router.get('/detail/:id', async (req, res) => {
+    try {
+        const [books] = await db.execute('SELECT * FROM books WHERE id = ?', [req.params.id]);
+        if (books.length === 0) {
+            req.flash('error_msg', 'Book not found');
+            return res.redirect('/books');
+        }
+
+        const book = books[0];
+        
+        // Get average rating
+        const [ratingResult] = await db.execute(`
+            SELECT AVG(rating) as avg_rating, COUNT(*) as total_ratings
+            FROM comments 
+            WHERE book_id = ? AND rating IS NOT NULL AND is_approved = TRUE
+        `, [req.params.id]);
+
+        const avgRating = ratingResult[0].avg_rating || 0;
+        const totalRatings = ratingResult[0].total_ratings || 0;
+
+        res.render('books/detail', { 
+            book: {
+                ...book,
+                avgRating: parseFloat(avgRating).toFixed(1),
+                totalRatings
+            },
+            user: req.session.user
+        });
+    } catch (err) {
+        console.error(err);
+        req.flash('error_msg', 'An error occurred while fetching book details');
+        res.redirect('/books');
+    }
+});
+
 module.exports = router; 

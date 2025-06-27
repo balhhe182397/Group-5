@@ -63,6 +63,20 @@ CREATE TABLE borrows (
     FOREIGN KEY (payment_confirmed_by) REFERENCES users(id)
 );
 
+-- Comments table
+CREATE TABLE comments (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    book_id INT NOT NULL,
+    user_id INT NOT NULL,
+    content TEXT NOT NULL,
+    rating INT CHECK (rating >= 1 AND rating <= 5),
+    is_approved BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (book_id) REFERENCES books(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
 -- Insert default admin user
 INSERT INTO users (username, password, email, full_name, role, is_verified)
 VALUES ('admin', 'admin123', 'admin@library.com', 'Admin User', 'admin', TRUE);
