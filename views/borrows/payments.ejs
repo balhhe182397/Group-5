@@ -14,7 +14,7 @@
                 <div class="card-body">
                     <h5 class="card-title">Pending Payments</h5>
                     <h2 class="mb-0">
-                        <%= payments.filter(p => p.payment_status === 'pending').length %>
+                        <%= payments.filter(p => p.status === 'pending').length %>
                     </h2>
                 </div>
             </div>
@@ -24,7 +24,7 @@
                 <div class="card-body">
                     <h5 class="card-title">Paid</h5>
                     <h2 class="mb-0">
-                        <%= payments.filter(p => p.payment_status === 'paid').length %>
+                        <%= payments.filter(p => p.status === 'paid').length %>
                     </h2>
                 </div>
             </div>
@@ -34,7 +34,7 @@
                 <div class="card-body">
                     <h5 class="card-title">Rejected</h5>
                     <h2 class="mb-0">
-                        <%= payments.filter(p => p.payment_status === 'cancelled').length %>
+                        <%= payments.filter(p => p.status === 'cancelled').length %>
                     </h2>
                 </div>
             </div>
@@ -68,25 +68,25 @@
                                     </td>
                                     <td><%= payment.title %></td>
                                     <td class="text-danger fw-bold">
-                                        <%= payment.current_fine.toLocaleString('vi-VN') %> VND
+                                        <%= payment.amount.toLocaleString('vi-VN') %> VND
                                     </td>
                                     <td>
-                                        <%= payment.payment_date ? new Date(payment.payment_date).toLocaleString() : '-' %>
+                                        <%= payment.confirmed_at ? new Date(payment.confirmed_at).toLocaleString() : '-' %>
                                     </td>
                                     <td>
-                                        <% if (payment.payment_status === 'pending') { %>
+                                        <% if (payment.status === 'pending') { %>
                                             <span class="badge bg-warning">Pending</span>
-                                        <% } else if (payment.payment_status === 'paid') { %>
+                                        <% } else if (payment.status === 'paid') { %>
                                             <span class="badge bg-success">Paid</span>
                                         <% } else { %>
                                             <span class="badge bg-danger">Rejected</span>
                                         <% } %>
                                     </td>
                                     <td>
-                                        <%= payment.approver_name || '-' %>
+                                        <%= payment.confirmed_by_name || '-' %>
                                     </td>
                                     <td>
-                                        <% if (payment.payment_status === 'pending') { %>
+                                        <% if (payment.status === 'pending') { %>
                                             <button class="btn btn-success btn-sm" 
                                                     onclick="confirmPayment(<%= payment.id %>)">
                                                 <i class="fas fa-check me-1"></i>Confirm
@@ -141,7 +141,7 @@
 <script>
 function confirmPayment(paymentId) {
     if (confirm('Are you sure you want to confirm this payment?')) {
-        fetch(`/borrows/approve-payment/${paymentId}`, {
+        fetch(`/payments/approve/${paymentId}`, {
             method: 'POST'
         })
         .then(response => {
@@ -160,7 +160,7 @@ function confirmPayment(paymentId) {
 
 function rejectPayment(paymentId) {
     if (confirm('Are you sure you want to reject this payment?')) {
-        fetch(`/borrows/reject-payment/${paymentId}`, {
+        fetch(`/payments/reject/${paymentId}`, {
             method: 'POST'
         })
         .then(response => {
@@ -193,8 +193,8 @@ function viewDetails(paymentId) {
                         <h6>Payment Information</h6>
                         <p><strong>Book:</strong> ${payment.title}</p>
                         <p><strong>Amount:</strong> ${payment.fine_amount.toLocaleString('vi-VN')} VND</p>
-                        <p><strong>Status:</strong> ${payment.payment_status}</p>
-                        <p><strong>Payment Date:</strong> ${new Date(payment.payment_date).toLocaleString()}</p>
+                        <p><strong>Status:</strong> ${payment.status}</p>
+                        <p><strong>Payment Date:</strong> ${new Date(payment.confirmed_at).toLocaleString()}</p>
                     </div>
                 `;
                 document.getElementById('paymentDetails').innerHTML = detailsHtml;

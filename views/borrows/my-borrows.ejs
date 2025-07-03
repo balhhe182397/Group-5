@@ -1,5 +1,10 @@
 <div class="container">
-    <h2 class="mb-4">My Borrows</h2>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">My Borrows</h2>
+        <a href="/payments/history" class="btn btn-outline-primary">
+            <i class="fas fa-receipt me-2"></i>Payment History
+        </a>
+    </div>
     <div class="table-responsive">
         <table class="table">
             <thead>
@@ -18,36 +23,14 @@
             <tbody>
                 <% if (borrows && borrows.length > 0) { %>
                     <% borrows.forEach(borrow => { %>
-                        <tr>
+                        <tr data-borrow-id="<%= borrow.id %>">
                             <td><%= borrow.title %></td>
                             <td><%= new Date(borrow.request_date).toLocaleDateString() %></td>
                             <td><%= borrow.pickup_date ? new Date(borrow.pickup_date).toLocaleDateString() : '-' %></td>
                             <td><%= borrow.due_date ? new Date(borrow.due_date).toLocaleDateString() : '-' %></td>
                             <td><%= borrow.return_date ? new Date(borrow.return_date).toLocaleDateString() : '-' %></td>
-                            <td>
-                                <% if (borrow.current_fine > 0) { %>
-                                    <span class="text-danger fw-bold">
-                                        <%= borrow.current_fine.toLocaleString('vi-VN') %> VND
-                                    </span>
-                                <% } else { %>
-                                    -
-                                <% } %>
-                            </td>
-                            <td>
-                                <% if (borrow.current_fine > 0) { %>
-                                    <% if (!borrow.payment_status || borrow.payment_status === '') { %>
-                                        <span class="badge bg-secondary">Not Paid</span>
-                                    <% } else if (borrow.payment_status === 'pending') { %>
-                                        <span class="badge bg-warning">Pending Confirmation</span>
-                                    <% } else if (borrow.payment_status === 'paid') { %>
-                                        <span class="badge bg-success">Payment Approved</span>
-                                    <% } else if (borrow.payment_status === 'cancelled') { %>
-                                        <span class="badge bg-danger">Payment Rejected</span>
-                                    <% } %>
-                                <% } else { %>
-                                    -
-                                <% } %>
-                            </td>
+                            <td class="current-fine-cell">-</td>
+                            <td class="payment-status-cell">-</td>
                             <td>
                                 <% if (borrow.status === 'returned') { %>
                                     <span class="badge bg-success">Returned</span>
@@ -61,19 +44,11 @@
                                     <span class="badge bg-primary">Borrowed</span>
                                 <% } %>
                             </td>
-                            <td>
-                                <% if (borrow.current_fine > 0) { %>
-                                    <button class="btn btn-primary btn-sm" 
-                                            data-bs-toggle="modal" 
-                                            data-bs-target="#paymentModal<%= borrow.id %>">
-                                        Pay Fine
-                                    </button>
-                                <% } %>
-                            </td>
+                            <td class="pay-action-cell"></td>
                         </tr>
 
                         <!-- Payment Modal for each borrow -->
-                        <% if (borrow.current_fine > 0) { %>
+                        <% if (true) { %>
                             <div class="modal fade" id="paymentModal<%= borrow.id %>" tabindex="-1" aria-hidden="true">
                                 <div class="modal-dialog">
                                     <div class="modal-content">
@@ -83,47 +58,23 @@
                                         </div>
                                         <div class="modal-body">
                                             <div class="text-center mb-4">
-                                                <h6>Fine Amount: <span class="text-danger fw-bold"><%= borrow.current_fine.toLocaleString('vi-VN') %> VND</span></h6>
+                                                <h6>Fine Amount: <span class="text-danger fw-bold" id="modalFineAmount<%= borrow.id %>">-</span></h6>
                                                 <p class="text-muted">Please transfer the amount to the following account:</p>
                                             </div>
-                                            
-                                            <div class="card mb-3">
-                                                <div class="card-body">
-                                                    <div class="row mb-2">
-                                                        <div class="col-4 fw-bold">Account Name:</div>
-                                                        <div class="col-8">NGUYEN VAN HOI</div>
-                                                    </div>
-                                                    <div class="row mb-2">
-                                                        <div class="col-4 fw-bold">Account Number:</div>
-                                                        <div class="col-8">633333363</div>
-                                                    </div>
-                                                    <div class="row mb-2">
-                                                        <div class="col-4 fw-bold">Bank:</div>
-                                                        <div class="col-8">MB BANK</div>
-                                                    </div>
-                                                    <div class="row">
-                                                        <div class="col-4 fw-bold">Transfer Content:</div>
-                                                        <div class="col-8">FINE_<%= borrow.id %></div>
-                                                    </div>
-                                                </div>
-                                            </div>
-
                                             <div class="text-center">
-                                                <img src="https://img.vietqr.io/image/MB-633333363-<%= borrow.current_fine %>-FINE_<%= borrow.id %>.png" 
+                                                <img src="https://img.vietqr.io/image/MB-633333363-0-FINE_<%= borrow.id %>.png" 
                                                      alt="VietQR Code" 
                                                      class="img-fluid mb-3" 
                                                      style="max-width: 200px;">
                                                 <p class="text-muted small">Scan QR code to pay</p>
                                             </div>
-
                                             <div class="alert alert-info">
                                                 <i class="fas fa-info-circle me-2"></i>
                                                 After payment, please click the button below to request payment confirmation.
                                             </div>
-
                                             <div class="text-center">
                                                 <button class="btn btn-success" 
-                                                        onclick="requestPaymentConfirmation(<%= borrow.id %>, <%= borrow.current_fine %>)"
+                                                        onclick="requestPaymentConfirmation(<%= borrow.id %>)"
                                                         id="confirmBtn<%= borrow.id %>">
                                                     <i class="fas fa-check-circle me-2"></i>I have paid
                                                 </button>
@@ -139,12 +90,7 @@
                     <% }); %>
                 <% } else { %>
                     <tr>
-                        <td colspan="8" class="text-center">
-                            <div class="alert alert-info mb-0">
-                                <i class="fas fa-info-circle me-2"></i> You haven't borrowed any books yet. 
-                                <a href="/books" class="alert-link">Browse books</a> to get started.
-                            </div>
-                        </td>
+                        <td colspan="9" class="text-center">No borrows found.</td>
                     </tr>
                 <% } %>
             </tbody>
@@ -165,32 +111,100 @@
 </div>
 
 <script>
-function requestPaymentConfirmation(borrowId, amount) {
-    fetch(`/borrows/request-payment-confirmation/${borrowId}`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ amount })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            const toast = new bootstrap.Toast(document.getElementById('paymentToast'));
-            document.querySelector('#paymentToast .toast-body').textContent = data.message;
-            toast.show();
-            
-            // Disable the confirm button
-            document.getElementById(`confirmBtn${borrowId}`).disabled = true;
-            document.getElementById(`confirmBtn${borrowId}`).innerHTML = 
-                '<i class="fas fa-clock me-2"></i>Waiting for confirmation';
-        } else {
-            alert(data.message);
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('An error occurred while requesting payment confirmation');
+document.addEventListener('DOMContentLoaded', function() {
+    // Lấy tất cả các borrowId trên trang
+    const borrowRows = document.querySelectorAll('tr[data-borrow-id]');
+    borrowRows.forEach(row => {
+        const borrowId = row.getAttribute('data-borrow-id');
+        fetch(`/payments/status/${borrowId}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    // Hiển thị số tiền nợ
+                    const fineCell = row.querySelector('.current-fine-cell');
+                    if (fineCell) {
+                        if (data.current_fine > 0) {
+                            fineCell.innerHTML = `<span class='text-danger fw-bold'>${data.current_fine.toLocaleString('vi-VN')} VND</span>`;
+                        } else {
+                            fineCell.innerHTML = '-';
+                        }
+                    }
+                    // Hiển thị trạng thái payment
+                    const statusCell = row.querySelector('.payment-status-cell');
+                    if (statusCell) {
+                        let html = '-';
+                        if (data.current_fine > 0) {
+                            if (!data.payment_status) {
+                                html = `<span class='badge bg-secondary'>Not Paid</span>`;
+                            } else if (data.payment_status === 'pending') {
+                                html = `<span class='badge bg-warning'>Pending Confirmation</span>`;
+                            } else if (data.payment_status === 'paid') {
+                                html = `<span class='badge bg-success'>Payment Approved</span>`;
+                            } else if (data.payment_status === 'cancelled') {
+                                html = `<span class='badge bg-danger'>Payment Rejected</span>`;
+                            }
+                        }
+                        statusCell.innerHTML = html;
+                    }
+                    // Hiển thị nút thanh toán
+                    const payCell = row.querySelector('.pay-action-cell');
+                    if (payCell) {
+                        if (data.current_fine > 0) {
+                            payCell.innerHTML = `<button class='btn btn-primary btn-sm' data-bs-toggle='modal' data-bs-target='#paymentModal${borrowId}'>Pay Fine</button>`;
+                        } else {
+                            payCell.innerHTML = '';
+                        }
+                    }
+                }
+            });
     });
+});
+
+function requestPaymentConfirmation(borrowId) {
+    // Lấy số tiền nợ hiện tại từ API trước khi gửi request
+    fetch(`/payments/status/${borrowId}`)
+        .then(res => res.json())
+        .then(data => {
+            if (data.success && data.current_fine > 0) {
+                fetch(`/payments/request/${borrowId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ amount: data.current_fine })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message);
+                        document.getElementById(`confirmBtn${borrowId}`).disabled = true;
+                        document.getElementById(`confirmBtn${borrowId}`).innerHTML = '<i class="fas fa-clock me-2"></i>Waiting for confirmation';
+                    } else {
+                        alert(data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while requesting payment confirmation');
+                });
+            } else {
+                alert('No fine to pay!');
+            }
+        });
 }
+
+// Cập nhật số tiền phạt trong modal khi mở
+var paymentModals = document.querySelectorAll('.modal');
+paymentModals.forEach(function(modal) {
+    modal.addEventListener('show.bs.modal', function(event) {
+        var borrowId = this.id.replace('paymentModal', '');
+        fetch(`/payments/status/${borrowId}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('modalFineAmount' + borrowId).innerText = data.current_fine > 0 ? data.current_fine.toLocaleString('vi-VN') + ' VND' : '-';
+                }
+            });
+    });
+});
 </script> 

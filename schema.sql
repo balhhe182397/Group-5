@@ -50,17 +50,28 @@ CREATE TABLE borrows (
     due_date TIMESTAMP NULL,
     return_date TIMESTAMP NULL,
     status ENUM('requested', 'borrowed', 'returned', 'overdue', 'cancelled') NOT NULL DEFAULT 'requested',
-    fine_amount DECIMAL(10,2) DEFAULT 0.00,
-    payment_status ENUM('pending', 'paid', 'cancelled') DEFAULT 'pending',
-    payment_date TIMESTAMP NULL,
-    payment_confirmed_by INT NULL,
     last_notification_date DATE NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (book_id) REFERENCES books(id),
     FOREIGN KEY (user_id) REFERENCES users(id),
-    FOREIGN KEY (approved_by) REFERENCES users(id),
-    FOREIGN KEY (payment_confirmed_by) REFERENCES users(id)
+    FOREIGN KEY (approved_by) REFERENCES users(id)
+);
+
+-- Payments table
+CREATE TABLE payments (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    borrow_id INT NOT NULL,
+    amount DECIMAL(10,2) NOT NULL,
+    status ENUM('pending', 'paid', 'cancelled') DEFAULT 'pending',
+    requested_by INT NOT NULL,
+    confirmed_by INT,
+    requested_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    confirmed_at DATETIME,
+    late_days_paid INT DEFAULT 0,
+    FOREIGN KEY (borrow_id) REFERENCES borrows(id),
+    FOREIGN KEY (requested_by) REFERENCES users(id),
+    FOREIGN KEY (confirmed_by) REFERENCES users(id)
 );
 
 -- Comments table
@@ -75,5 +86,28 @@ CREATE TABLE comments (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (book_id) REFERENCES books(id) ON DELETE CASCADE,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- Tài khoản admin mặc định
+INSERT INTO users (
+    username,
+    password,
+    email,
+    full_name,
+    role,
+    student_id,
+    lecturer_id,
+    id_card_image,
+    is_verified
+) VALUES (
+    'admin',
+    'admin123',
+    'admin@example.com',
+    'Admin User',
+    'admin',
+    NULL,
+    NULL,
+    NULL,
+    TRUE
 );
 

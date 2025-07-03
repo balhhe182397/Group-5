@@ -359,14 +359,27 @@ router.post('/reset-password/:token', async (req, res) => {
 // Get all users (admin only)
 router.get('/', isAdmin, async (req, res) => {
     try {
-        const { search, sort } = req.query;
+        const { search, sort, code } = req.query;
         let query = 'SELECT * FROM users';
         const params = [];
+        let whereAdded = false;
 
         // Add search condition if search parameter exists
         if (search) {
             query += ' WHERE email LIKE ?';
             params.push(`%${search}%`);
+            whereAdded = true;
+        }
+
+        // Add code search (student_id or lecturer_id)
+        if (code) {
+            if (!whereAdded) {
+                query += ' WHERE ';
+            } else {
+                query += ' AND ';
+            }
+            query += '(student_id LIKE ? OR lecturer_id LIKE ?)';
+            params.push(`%${code}%`, `%${code}%`);
         }
 
         // Add sorting
@@ -382,7 +395,8 @@ router.get('/', isAdmin, async (req, res) => {
         res.render('users/index', { 
             users,
             search: search || '',
-            sort: sort || ''
+            sort: sort || '',
+            code: code || ''
         });
     } catch (err) {
         console.error(err);

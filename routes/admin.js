@@ -63,4 +63,16 @@ router.get('/reports/users', isAdmin, async (req, res) => {
     }
 });
 
+// Users Management page
+router.get('/users', isAdmin, async (req, res) => {
+    try {
+        const [users] = await db.query('SELECT * FROM users ORDER BY created_at DESC');
+        res.render('admin/users', { users });
+    } catch (err) {
+        console.error(err);
+        req.flash('error_msg', 'An error occurred while loading users');
+        res.redirect('/admin');
+    }
+});
+
 module.exports = router; 

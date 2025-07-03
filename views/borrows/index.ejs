@@ -24,7 +24,7 @@
             </thead>
             <tbody>
                 <% borrows.forEach(borrow => { %>
-                    <tr>
+                    <tr data-borrow-id="<%= borrow.id %>">
                         <td><%= borrow.id %></td>
                         <td><%= borrow.full_name %></td>
                         <td><%= borrow.title %></td>
@@ -44,36 +44,23 @@
                             <% } %>
                         </td>
                         <td>
-                            <span class="badge bg-<%= 
-                                borrow.status === 'requested' ? 'warning' :
-                                borrow.status === 'borrowed' ? 'primary' :
-                                borrow.status === 'returned' ? 'success' :
-                                borrow.status === 'overdue' ? 'danger' :
-                                'secondary'
-                            %>">
-                                <%= borrow.status.charAt(0).toUpperCase() + borrow.status.slice(1) %>
+                            <% let isOverdue = false;
+                               if (borrow.status === 'borrowed' && borrow.due_date && new Date(borrow.due_date) < new Date() && !borrow.return_date) {
+                                   isOverdue = true;
+                               }
+                               let statusLabel = isOverdue ? 'Overdue' : (borrow.status.charAt(0).toUpperCase() + borrow.status.slice(1));
+                               let badgeClass = isOverdue ? 'danger' :
+                                   (borrow.status === 'requested' ? 'warning' :
+                                   borrow.status === 'borrowed' ? 'primary' :
+                                   borrow.status === 'returned' ? 'success' :
+                                   borrow.status === 'overdue' ? 'danger' :
+                                   'secondary');
+                            %>
+                            <span class="badge bg-<%= badgeClass %>">
+                                <%= statusLabel %>
                             </span>
                         </td>
-                        <td>
-                            <% if (borrow.current_fine > 0) { %>
-                                <span class="text-danger fw-bold">
-                                    <%= borrow.current_fine.toLocaleString('vi-VN') %> VND
-                                </span>
-                                <% if (borrow.payment_status === 'pending') { %>
-                                    <div class="mt-2">
-                                        <a href="/borrows/payments" class="btn btn-info btn-sm">
-                                            <i class="fas fa-money-bill-wave me-1"></i>Manage Payment
-                                        </a>
-                                    </div>
-                                <% } else if (borrow.payment_status === 'paid') { %>
-                                    <span class="badge bg-success">Paid</span>
-                                <% } else if (borrow.payment_status === 'cancelled') { %>
-                                    <span class="badge bg-danger">Rejected</span>
-                                <% } %>
-                            <% } else { %>
-                                -
-                            <% } %>
-                        </td>
+                        <td class="current-fine-cell">-</td>
                         <td>
                             <% if (borrow.approval_status === 'pending') { %>
                                 <span class="badge bg-warning">Pending</span>
@@ -122,6 +109,29 @@
 <script>
 $(document).ready(function() {
     $('#adminTable').DataTable();
+});
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const borrowRows = document.querySelectorAll('tr[data-borrow-id]');
+    borrowRows.forEach(row => {
+        const borrowId = row.getAttribute('data-borrow-id');
+        fetch(`/payments/status/${borrowId}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    const fineCell = row.querySelector('.current-fine-cell');
+                    if (fineCell) {
+                        if (data.current_fine > 0) {
+                            fineCell.innerHTML = `<span class='text-danger fw-bold'>${data.current_fine.toLocaleString('vi-VN')} VND</span>`;
+                        } else {
+                            fineCell.innerHTML = '-';
+                        }
+                    }
+                }
+            });
+    });
 });
 </script>
 

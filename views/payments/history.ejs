@@ -1,0 +1,49 @@
+<div class="container mt-4">
+    <h2 class="mb-4">Payment History</h2>
+    <div class="table-responsive">
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Book</th>
+                    <th>Amount</th>
+                    <th>Late Days Paid</th>
+                    <th>Status</th>
+                    <th>Requested At</th>
+                    <th>Confirmed At</th>
+                    <th>Due Date</th>
+                    <th>Return Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% if (payments.length > 0) { %>
+                    <% payments.forEach((p, idx) => { %>
+                        <tr>
+                            <td><%= idx + 1 %></td>
+                            <td><%= p.title %></td>
+                            <td class="text-danger fw-bold"><%= p.amount.toLocaleString('vi-VN') %> VND</td>
+                            <td><%= p.late_days_paid %></td>
+                            <td>
+                                <% if (p.status === 'pending') { %>
+                                    <span class="badge bg-warning">Pending</span>
+                                <% } else if (p.status === 'paid') { %>
+                                    <span class="badge bg-success">Paid</span>
+                                <% } else { %>
+                                    <span class="badge bg-danger">Rejected</span>
+                                <% } %>
+                            </td>
+                            <td><%= new Date(p.requested_at).toLocaleString() %></td>
+                            <td><%= p.confirmed_at ? new Date(p.confirmed_at).toLocaleString() : '-' %></td>
+                            <td><%= p.due_date ? new Date(p.due_date).toLocaleDateString() : '-' %></td>
+                            <td><%= p.return_date ? new Date(p.return_date).toLocaleDateString() : '-' %></td>
+                        </tr>
+                    <% }) %>
+                <% } else { %>
+                    <tr>
+                        <td colspan="9" class="text-center">No payment history found.</td>
+                    </tr>
+                <% } %>
+            </tbody>
+        </table>
+    </div>
+</div> 

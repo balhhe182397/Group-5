@@ -47,22 +47,16 @@
                                 <span class="badge bg-warning">Pending</span>
                             </td>
                             <td>
-                                <% if (borrow.current_fine > 0) { %>
-                                    <span class="text-danger fw-bold">
-                                        <%= borrow.current_fine.toLocaleString('vi-VN') %> VND
-                                    </span>
-                                    <% if (borrow.payment_status === 'pending') { %>
-                                        <div class="mt-2">
-                                            <a href="/borrows/payments" class="btn btn-info btn-sm">
-                                                <i class="fas fa-money-bill-wave me-1"></i>Manage Payment
-                                            </a>
-                                        </div>
-                                    <% } else if (borrow.payment_status === 'paid') { %>
-                                        <span class="badge bg-success">Paid</span>
-                                    <% } else if (borrow.payment_status === 'cancelled') { %>
-                                        <span class="badge bg-danger">Rejected</span>
-                                    <% } %>
-                                <% } else { %>
+                                <% if (borrow.due_date && borrow.status !== 'returned') { 
+                                    const now = new Date();
+                                    const due = new Date(borrow.due_date);
+                                    const daysLate = now > due ? Math.ceil((now - due) / (1000 * 60 * 60 * 24)) : 0;
+                                    if (daysLate > 0) { %>
+                                        <span class="text-danger fw-bold"><%= (daysLate * 5000).toLocaleString('vi-VN') %> VND</span>
+                                    <% } else { %>
+                                        -
+                                    <% }
+                                } else { %>
                                     -
                                 <% } %>
                             </td>
