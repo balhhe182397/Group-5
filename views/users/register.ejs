@@ -26,11 +26,10 @@
                         <div class="mb-3">
                             <label for="fullName" class="form-label">Full Name</label>
                             <input type="text" class="form-control" id="fullName" name="fullName" 
-                                pattern="^[a-zA-Z\s]{2,50}$"
                                 title="Full name must be 2-50 characters long and can only contain letters and spaces"
                                 required>
-                            <small class="form-text text-muted">Only letters and spaces, 2-50 characters.</small>
-                            <div class="invalid-feedback">Full name must be 2-50 characters, only letters and spaces.</div>
+                            <small class="form-text text-muted">Enter your full name (2-50 characters, Vietnamese characters allowed).</small>
+                            <div class="invalid-feedback">Full name must be 2-50 characters.</div>
                         </div>
                         <div class="mb-3">
                             <label for="role" class="form-label">Role</label>
@@ -43,18 +42,18 @@
                         <div class="mb-3" id="studentIdField" style="display: none;">
                             <label for="studentId" class="form-label">Student ID</label>
                             <input type="text" class="form-control" id="studentId" name="studentId"
-                                pattern="^[A-Z0-9]{8,12}$"
-                                title="Student ID must be 8-12 characters long and can only contain uppercase letters and numbers">
-                            <small class="form-text text-muted">8-12 uppercase letters and numbers, e.g., 1234ABCD</small>
-                            <div class="invalid-feedback">Student ID must be 8-12 uppercase letters and numbers.</div>
+                                pattern="^[a-zA-Z0-9]{8,12}$"
+                                title="Student ID must be 8-12 characters long and can only contain letters and numbers">
+                            <small class="form-text text-muted">8-12 characters, letters and numbers only.</small>
+                            <div class="invalid-feedback">Student ID must be 8-12 characters, letters and numbers only.</div>
                         </div>
                         <div class="mb-3" id="lecturerIdField" style="display: none;">
                             <label for="lecturerId" class="form-label">Lecturer ID</label>
                             <input type="text" class="form-control" id="lecturerId" name="lecturerId"
-                                pattern="^[A-Z0-9]{8,12}$"
-                                title="Lecturer ID must be 8-12 characters long and can only contain uppercase letters and numbers">
-                            <small class="form-text text-muted">8-12 uppercase letters and numbers, e.g., 1234ABCD</small>
-                            <div class="invalid-feedback">Lecturer ID must be 8-12 uppercase letters and numbers.</div>
+                                pattern="^[a-zA-Z0-9]{8,12}$"
+                                title="Lecturer ID must be 8-12 characters long and can only contain letters and numbers">
+                            <small class="form-text text-muted">8-12 characters, letters and numbers only.</small>
+                            <div class="invalid-feedback">Lecturer ID must be 8-12 characters, letters and numbers only.</div>
                         </div>
                         <div class="mb-3">
                             <label for="idCard" class="form-label">ID Card Image</label>
