@@ -137,12 +137,93 @@ router.post('/edit/:id', isAdmin, upload.single('cover_image'), async (req, res)
 // Delete book
 router.post('/delete/:id', isAdmin, async (req, res) => {
     try {
-        await db.query('DELETE FROM books WHERE id = ?', [req.params.id]);
-        req.flash('success_msg', 'Book deleted successfully');
+        console.log('Attempting to delete book with ID:', req.params.id);
+        
+        // Check if book exists
+        const [books] = await db.query('SELECT * FROM books WHERE id = ?', [req.params.id]);
+        if (books.length === 0) {
+            console.log('Book not found with ID:', req.params.id);
+            req.flash('error_msg', 'Book not found');
+            return res.redirect('/books');
+        }
+
+        console.log('Found book:', books[0].title);
+
+        // Check if book is currently borrowed
+        const [borrows] = await db.query(
+            'SELECT COUNT(*) as count FROM borrows WHERE book_id = ? AND status IN ("requested", "borrowed")',
+            [req.params.id]
+        );
+
+        console.log('Active borrows for this book:', borrows[0].count);
+
+        if (borrows[0].count > 0) {
+            console.log('Cannot delete - book is currently borrowed');
+            
+            // Lấy thông tin chi tiết về các lần mượn
+            const [borrowDetails] = await db.query(`
+                SELECT br.*, u.full_name, u.email, u.student_id, u.lecturer_id
+                FROM borrows br 
+                JOIN users u ON br.user_id = u.id 
+                WHERE br.book_id = ? AND br.status IN ("requested", "borrowed")
+                ORDER BY br.request_date DESC
+            `, [req.params.id]);
+            
+            errorMessage = `Cannot delete book "${books[0].title}" because it has ${borrows[0].count} active borrow(s).\n\nPlease wait for all books to be returned or cancel pending requests before deleting.`;
+            
+            req.flash('error_msg', errorMessage);
+            return res.redirect('/books');
+        }
+
+        // Check for any borrow records (including returned ones)
+        const [allBorrows] = await db.query(
+            'SELECT COUNT(*) as count FROM borrows WHERE book_id = ?',
+            [req.params.id]
+        );
+
+        console.log('Total borrow records for this book:', allBorrows[0].count);
+
+        // Delete the book
+        console.log('Attempting to delete book from database...');
+        const [result] = await db.query('DELETE FROM books WHERE id = ?', [req.params.id]);
+        
+        console.log('Delete result:', result);
+        
+        if (result.affectedRows > 0) {
+            console.log('Book deleted successfully');
+            req.flash('success_msg', 'Book deleted successfully');
+        } else {
+            console.log('No rows were deleted');
+            req.flash('error_msg', 'Book was not deleted');
+        }
+        
         res.redirect('/books');
     } catch (err) {
-        console.error(err);
-        req.flash('error_msg', 'An error occurred while deleting book');
+        console.error('Error deleting book:', err);
+        console.error('Error code:', err.code);
+        console.error('Error message:', err.message);
+        
+        // Check for foreign key constraint error
+        if (err.code === 'ER_ROW_IS_REFERENCED_2') {
+            // Lấy thông tin về lịch sử mượn
+            const [borrowHistory] = await db.query(`
+                SELECT COUNT(*) as total_borrows,
+                       SUM(CASE WHEN status IN ('requested', 'borrowed') THEN 1 ELSE 0 END) as active_borrows
+                FROM borrows WHERE book_id = ?
+            `, [req.params.id]);
+            
+            let errorMessage = `Cannot delete book "${books[0].title}" because it has related data:\n\n`;
+            errorMessage += `- Total borrows: ${borrowHistory[0].total_borrows}\n`;
+            errorMessage += `- Currently borrowed: ${borrowHistory[0].active_borrows}\n\n`;
+            errorMessage += 'To delete this book, you need to:\n';
+            errorMessage += '1. Wait for all books to be returned\n';
+            errorMessage += '2. Or delete all borrow history for this book\n';
+            errorMessage += '3. Or contact system administrator for assistance';
+            
+            req.flash('error_msg', errorMessage);
+        } else {
+            req.flash('error_msg', 'An error occurred while deleting book: ' + err.message);
+        }
         res.redirect('/books');
     }
 });
@@ -249,6 +330,80 @@ router.get('/detail/:id', async (req, res) => {
         console.error(err);
         req.flash('error_msg', 'An error occurred while fetching book details');
         res.redirect('/books');
+    }
+});
+
+// Test route for debugging delete functionality
+router.get('/test-delete', isAdmin, (req, res) => {
+    res.render('test-delete');
+});
+
+// Route to check book status before deletion
+router.get('/check-delete/:id', isAdmin, async (req, res) => {
+    try {
+        const [books] = await db.query('SELECT * FROM books WHERE id = ?', [req.params.id]);
+        if (books.length === 0) {
+            return res.json({ canDelete: false, message: 'Book not found' });
+        }
+
+        const book = books[0];
+        
+        // Check borrow status
+        const [borrows] = await db.query(`
+            SELECT br.*, u.full_name, u.email, u.student_id, u.lecturer_id
+            FROM borrows br 
+            JOIN users u ON br.user_id = u.id 
+            WHERE br.book_id = ? AND br.status IN ("requested", "borrowed")
+            ORDER BY br.request_date DESC
+        `, [req.params.id]);
+
+        if (borrows.length > 0) {
+            let message = `Cannot delete book "${book.title}" because it has ${borrows.length} active borrow(s).\n\nPlease wait for all books to be returned or cancel pending requests before deleting.`;
+            
+            return res.json({ canDelete: false, message: message });
+        }
+
+        // Check total borrow history
+        const [allBorrows] = await db.query(
+            'SELECT COUNT(*) as count FROM borrows WHERE book_id = ?',
+            [req.params.id]
+        );
+
+        if (allBorrows[0].count > 0) {
+            return res.json({ 
+                canDelete: false, 
+                message: `Book "${book.title}" has ${allBorrows[0].count} borrow(s) in history. Are you sure you want to delete all borrow history?` 
+            });
+        }
+
+        return res.json({ canDelete: true, message: `Book "${book.title}" can be deleted` });
+    } catch (err) {
+        console.error('Error checking book status:', err);
+        res.json({ canDelete: false, message: 'An error occurred while checking book status' });
+    }
+});
+
+// Simple test delete route without authentication
+router.post('/test-delete/:id', async (req, res) => {
+    try {
+        console.log('Test delete route called with ID:', req.params.id);
+        console.log('User session:', req.session.user);
+        
+        const [books] = await db.query('SELECT * FROM books WHERE id = ?', [req.params.id]);
+        if (books.length === 0) {
+            return res.json({ success: false, message: 'Book not found' });
+        }
+        
+        const [result] = await db.query('DELETE FROM books WHERE id = ?', [req.params.id]);
+        
+        if (result.affectedRows > 0) {
+            res.json({ success: true, message: 'Book deleted successfully' });
+        } else {
+            res.json({ success: false, message: 'No rows deleted' });
+        }
+    } catch (err) {
+        console.error('Test delete error:', err);
+        res.json({ success: false, message: err.message });
     }
 });
 

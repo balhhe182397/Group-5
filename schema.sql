@@ -53,7 +53,7 @@ CREATE TABLE borrows (
     last_notification_date DATE NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (book_id) REFERENCES books(id),
+    FOREIGN KEY (book_id) REFERENCES books(id) ON DELETE CASCADE,
     FOREIGN KEY (user_id) REFERENCES users(id),
     FOREIGN KEY (approved_by) REFERENCES users(id)
 );
@@ -69,7 +69,7 @@ CREATE TABLE payments (
     requested_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     confirmed_at DATETIME,
     late_days_paid INT DEFAULT 0,
-    FOREIGN KEY (borrow_id) REFERENCES borrows(id),
+    FOREIGN KEY (borrow_id) REFERENCES borrows(id) ON DELETE CASCADE,
     FOREIGN KEY (requested_by) REFERENCES users(id),
     FOREIGN KEY (confirmed_by) REFERENCES users(id)
 );

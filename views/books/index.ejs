@@ -30,11 +30,11 @@
         <% } %>
     </div>
 
-    <!-- Search Section -->
+    <!-- Search and Filter Section -->
     <div class="card shadow-sm border-0 mb-4">
         <div class="card-body p-3">
             <form action="/books/search" method="GET" class="row g-3">
-                <div class="col-md-9">
+                <div class="col-md-4">
                     <div class="input-group">
                         <span class="input-group-text bg-white border-end-0">
                             <i class="fas fa-search text-primary"></i>
@@ -43,8 +43,27 @@
                     </div>
                 </div>
                 <div class="col-md-3">
+                    <select class="form-select" name="category">
+                        <option value="">All Categories</option>
+                        <option value="Fiction" <%= typeof selectedCategory !== 'undefined' && selectedCategory === 'Fiction' ? 'selected' : '' %>>Fiction</option>
+                        <option value="Non-Fiction" <%= typeof selectedCategory !== 'undefined' && selectedCategory === 'Non-Fiction' ? 'selected' : '' %>>Non-Fiction</option>
+                        <option value="Science" <%= typeof selectedCategory !== 'undefined' && selectedCategory === 'Science' ? 'selected' : '' %>>Science</option>
+                        <option value="Technology" <%= typeof selectedCategory !== 'undefined' && selectedCategory === 'Technology' ? 'selected' : '' %>>Technology</option>
+                        <option value="History" <%= typeof selectedCategory !== 'undefined' && selectedCategory === 'History' ? 'selected' : '' %>>History</option>
+                        <option value="Biography" <%= typeof selectedCategory !== 'undefined' && selectedCategory === 'Biography' ? 'selected' : '' %>>Biography</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" name="sort">
+                        <option value="borrows" <%= typeof sortBy !== 'undefined' && sortBy === 'borrows' ? 'selected' : '' %>>Most Borrowed</option>
+                        <option value="recent" <%= typeof sortBy !== 'undefined' && sortBy === 'recent' ? 'selected' : '' %>>Recently Added</option>
+                        <option value="title" <%= typeof sortBy !== 'undefined' && sortBy === 'title' ? 'selected' : '' %>>Title A-Z</option>
+                        <option value="author" <%= typeof sortBy !== 'undefined' && sortBy === 'author' ? 'selected' : '' %>>Author A-Z</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
                     <button type="submit" class="btn btn-primary w-100">
-                        <i class="fas fa-search me-2"></i>Search
+                        <i class="fas fa-filter me-2"></i>Filter
                     </button>
                 </div>
             </form>
@@ -264,24 +283,35 @@
     color: #2c3e50;
 }
 
+/* Search and Filter Styles */
 .input-group-text {
+    background-color: #f8f9fa;
+    border-right: none;
     border-radius: 6px 0 0 6px;
     padding: 0.375rem 0.75rem;
 }
 
-.form-control {
+.input-group .form-control {
+    border-left: none;
+    border-radius: 0 6px 6px 0;
+    padding: 0.375rem 0.75rem;
+    font-size: 0.9rem;
+}
+
+.input-group .form-control:focus {
+    border-color: #ced4da;
+    box-shadow: none;
+}
+
+.form-select {
     border-radius: 6px;
     padding: 0.375rem 0.75rem;
     font-size: 0.9rem;
 }
 
-.form-control:focus {
+.form-select:focus {
+    border-color: #ced4da;
     box-shadow: none;
-    border-color: #4a90e2;
-}
-
-.input-group .form-control {
-    border-radius: 0 6px 6px 0;
 }
 
 .btn-group {
@@ -317,20 +347,48 @@
 
 <script>
 function deleteBook(bookId) {
-    if (confirm('Are you sure you want to delete this book?')) {
-        fetch(`/books/delete/${bookId}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        }).then(response => {
-            if (response.ok) {
-                window.location.reload();
-            } else {
-                alert('Error deleting book');
-            }
-        });
-    }
+    // Kiểm tra trạng thái sách trước khi xóa
+    fetch(`/books/check-delete/${bookId}`)
+    .then(response => response.json())
+    .then(data => {
+        console.log('Check delete result:', data);
+        
+        if (!data.canDelete) {
+            // Show detailed message
+            alert(data.message);
+            return;
+        }
+        
+        // If can delete, ask for confirmation
+        if (confirm(data.message + '\n\nAre you sure you want to delete this book?')) {
+            console.log('Attempting to delete book with ID:', bookId);
+            
+            // Tạo form data để gửi POST request
+            const formData = new FormData();
+            
+            fetch(`/books/delete/${bookId}`, {
+                method: 'POST',
+                body: formData
+            }).then(response => {
+                console.log('Response status:', response.status);
+                console.log('Response ok:', response.ok);
+                
+                if (response.ok) {
+                    console.log('Book deleted successfully');
+                    window.location.reload();
+                } else {
+                    console.log('Error response received');
+                    alert('Error deleting book. Status: ' + response.status);
+                }
+            }).catch(error => {
+                console.error('Fetch error:', error);
+                alert('Error deleting book: ' + error.message);
+            });
+        }
+    }).catch(error => {
+        console.error('Error checking book status:', error);
+        alert('Error checking book status: ' + error.message);
+    });
 }
 </script>
 
